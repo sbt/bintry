@@ -13,6 +13,7 @@ trait Methods { self: Requests =>
   case class Repo(sub: String, repo: String) extends Client.Completion {
 
     case class Package(name: String) extends Client.Completion { 
+      /** warning: this is a buggy part of the api */
       object Attrs {
         private def base = apiHost / "packages" / sub / repo / name / "attributes"
 
@@ -36,12 +37,15 @@ trait Methods { self: Requests =>
       }
 
       case class Version(vers: String) extends Client.Completion {
+        /** warning: this is a buggy part of the api */
         object Attrs {
-          private def base = apiHost / "packages" / sub / repo / name / "versions" / vers / "attributes"
+          private def base =
+            apiHost / "packages" / sub / repo / name / "versions" / vers / "attributes"
 
           /** https://bintray.com/docs/rest/api.html#_get_attributes */
           def apply(names: String*) =
-            complete(if (names.isEmpty) base else base <<? Map("names" -> names.mkString(",")))
+            complete(if (names.isEmpty) base else base <<?
+                     Map("names" -> names.mkString(",")))
 
           /** https://bintray.com/docs/rest/api.html#_set_attributes */
           def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
@@ -57,7 +61,8 @@ trait Methods { self: Requests =>
                      Map("names" -> names.mkString(",")))          
         }
 
-        private def base = apiHost / "packages" / sub / repo / name / "versions" / vers
+        private def base =
+          apiHost / "packages" / sub / repo / name / "versions" / vers
 
         private def contentBase = apiHost / "content" / sub / repo
 
