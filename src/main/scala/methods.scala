@@ -15,48 +15,68 @@ trait Methods { self: Requests =>
     case class Package(name: String) extends Client.Completion { 
       object Attrs {
         private def base = apiHost / "packages" / sub / repo / name / "attributes"
+
+        /** https://bintray.com/docs/rest/api.html#_get_attributes */
         def apply(names: String*) =
-          complete(if (names.isEmpty) base else base <<? Map("names" -> names.mkString(",")))
-        def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) = {
-          val js = compact(render(AttrsJson(attrs)))
-          println("sending %s" format js)
-          complete(base.POST << js)
-        }
+          complete(if (names.isEmpty) base else base <<?
+                   Map("names" -> names.mkString(",")))
+
+        /** https://bintray.com/docs/rest/api.html#_set_attributes */
+        def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
+          complete(base.POST << compact(render(AttrsJson(attrs))))
+
+        /** https://bintray.com/docs/rest/api.html#_update_attributes */
         def update[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
           complete(base.PATCH << compact(render(AttrsJson(attrs))))
+
+        /** https://bintray.com/docs/rest/api.html#_delete_attributes */
         def delete(names: String*) =
-          complete(if (names.isEmpty) base.DELETE else base.DELETE <<? Map("names" -> names.mkString(",")))
+          complete(if (names.isEmpty) base.DELETE else base.DELETE <<?
+                   Map("names" -> names.mkString(",")))
       }
 
       case class Version(vers: String) extends Client.Completion {
         object Attrs {
           private def base = apiHost / "packages" / sub / repo / name / "versions" / vers / "attributes"
+
+          /** https://bintray.com/docs/rest/api.html#_get_attributes */
           def apply(names: String*) =
             complete(if (names.isEmpty) base else base <<? Map("names" -> names.mkString(",")))
+
+          /** https://bintray.com/docs/rest/api.html#_set_attributes */
           def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
             complete(base.POST << compact(render(AttrsJson(attrs))))
+
+          /** https://bintray.com/docs/rest/api.html#_update_attributes */
           def update[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
             complete(base.PATCH << compact(render(AttrsJson(attrs))))
+
+          /** https://bintray.com/docs/rest/api.html#_delete_attributes */
           def delete(names: String*) =
-            complete(if (names.isEmpty) base.DELETE else base.DELETE <<? Map("names" -> names.mkString(",")))          
+            complete(if (names.isEmpty) base.DELETE else base.DELETE <<?
+                     Map("names" -> names.mkString(",")))          
         }
 
         private def base = apiHost / "packages" / sub / repo / name / "versions" / vers
 
         private def contentBase = apiHost / "content" / sub / repo
 
+        /** https://bintray.com/docs/rest/api.html#_get_version */
         override def apply[T](handler: Client.Handler[T]) =
           request(base)(handler)
 
+        /** https://bintray.com/docs/rest/api.html#_delete_version */
         def delete =
           complete(base.DELETE)
 
+        /** https://bintray.com/docs/rest/api.html#_update_version */
         def update(desc: String) =
           complete(base.PATCH <<
                    compact(render(("desc" -> desc))))
 
         def attrs = Attrs
 
+        /** https://bintray.com/docs/rest/api.html#_upload_content */
         def upload(path: String, content: File,
                    publish: Boolean = false, explode: Boolean = false) =
                      complete(contentBase.PUT / "%s;publish=%s;explode=%s".format(
@@ -67,21 +87,26 @@ trait Methods { self: Requests =>
                          "X-Bintray-Version" -> vers
                        ) <<< content)
 
+        /** https://bintray.com/docs/rest/api.html#_publish_discard_uploaded_content */
         def publish =
           complete(contentBase.POST / name / vers / "publish")
 
+        /** https://bintray.com/docs/rest/api.html#_publish_discard_uploaded_content */
         def discard =
           complete(contentBase.POST / name / vers / "publish" << compact(render("discard" -> true)))
       }
 
       private def base = apiHost / "packages" / sub / repo / name
 
+      /** https://bintray.com/docs/rest/api.html#_get_package */
       override def apply[T](handler: Client.Handler[T]) =
         request(base)(handler)
 
+      /** https://bintray.com/docs/rest/api.html#_delete_package */
       def delete =
         complete(base.DELETE)
 
+      /** https://bintray.com/docs/rest/api.html#_update_package */
       def update(desc: String, labels: String*) =
         complete(base.PATCH / name <<
                  compact(render(
@@ -93,11 +118,13 @@ trait Methods { self: Requests =>
       def version(version: String = "_latest") =
         Version(version)
 
+      /** https://bintray.com/docs/rest/api.html#_create_version */
       def createVersion(version: String) =
         complete(base.POST / "versions" <<
                  compact(render(
                    ("name" -> version))))
 
+      /** https://bintray.com/docs/rest/api.html#_maven_upload */
       def mvnUpload(pkg: String, path: String, content: File,
                     publish: Boolean = false, explode: Boolean = false) =
                       complete(apiHost.PUT / "maven" / sub / repo / pkg /
@@ -114,12 +141,14 @@ trait Methods { self: Requests =>
     override def apply[T](handler: Client.Handler[T]) =
       request(base)(handler)
 
-    def packages =
-      complete(base / "packages")
+    /** https://bintray.com/docs/rest/api.html#_get_repository */
+    def packages(pos: Int = 0) =
+      complete(base / "packages" <<? Map("start_pos" -> pos.toString))
 
     def get(pkg: String) =
       Package(pkg)
 
+    /** https://bintray.com/docs/rest/api.html#_create_package */
     def createPackage(name: String, desc: String, labels: String*) =
       complete(packagesBase.POST <<
                compact(render(
@@ -131,11 +160,13 @@ trait Methods { self: Requests =>
   case class User(user: String) extends Client.Completion {
     private def base = apiHost / "users" / user
 
+    /** https://bintray.com/docs/rest/api.html#_get_user */
     override def apply[T](handler: Client.Handler[T]) =
       request(base)(handler)
 
-    def followers =
-      complete(base / "followers")
+    /** https://bintray.com/docs/rest/api.html#_get_followers */
+    def followers(pos: Int = 0) =
+      complete(base / "followers" <<? Map("start_pos" -> pos.toString))
   }
 
   case class Webhooks(sub: String, repo: Option[String] = None) extends Client.Completion {
@@ -149,9 +180,11 @@ trait Methods { self: Requests =>
       repo.map(hooks / _).getOrElse(hooks)
     }
 
+    /** https://bintray.com/docs/rest/api.html#_get_webhooks */
     override def apply[T](handler: Client.Handler[T]) =
       request(base)(handler)
 
+     /** https://bintray.com/docs/rest/api.html#_register_a_webhook */
      def create(pkg: String, url: String, method: Method) =
       complete(base.POST / pkg << compact(render(
         ("url" -> url) ~
@@ -161,36 +194,61 @@ trait Methods { self: Requests =>
           case GET => "get"
         })))))
 
+    /** https://bintray.com/docs/rest/api.html#_delete_a_webhook */
     def delete(pkg: String) =
       complete(base.DELETE / pkg)
 
+    /** https://bintray.com/docs/rest/api.html#_test_a_webhook */
     def test(pkg: String, version: String) =
       complete(base.POST / pkg / version)
   }
 
   object Search {
-    def searchBase = apiHost / "search"
+    private def base = apiHost / "search"
 
-    def repos(name: Option[String] = None, desc: Option[String] = None) =
-      complete(searchBase / "repos" <<?
-               Map.empty[String, String] ++ name.map(("name" -> _)) ++ desc.map("desc" -> _))
+    /** https://bintray.com/docs/rest/api.html#_repository_search */
+    def repos(
+      name: Option[String] = None, desc: Option[String] = None,
+      pos: Int = 0) =
+      complete(base / "repos" <<?
+               Map("start_pos" -> pos.toString) ++
+                 name.map("name" -> _) ++
+                 desc.map("desc" -> _))
 
-    def packages(name: Option[String] = None, desc: Option[String] = None,
-                 subject: Option[String] = None, repo: Option[String] = None) =
-     complete(searchBase / "packages" <<?
-              Map.empty[String, String] ++ name.map(("name" -> _)) ++ desc.map(("desc" -> _)) ++
-                subject.map(("subject" -> _)) ++ repo.map(("repo" -> _)))
+    /** https://bintray.com/docs/rest/api.html#_package_search */
+    def packages(
+      name: Option[String] = None, desc: Option[String] = None,
+      subject: Option[String] = None, repo: Option[String] = None,
+      pos: Int = 0) =
+        complete(base / "packages" <<?
+                 Map("start_pos" -> pos.toString) ++
+                   name.map("name" -> _) ++
+                   desc.map("desc" -> _) ++
+                   subject.map("subject" -> _) ++
+                   repo.map("repo" -> _))
 
-    def file(name: String, repo: Option[String] = None) =
-      complete(searchBase / "file" <<? Map("name" -> name) ++ repo.map(("repo" -> _)))
+    /** https://bintray.com/docs/rest/api.html#_file_search_by_name */
+    def file(
+      name: String, repo: Option[String] = None,
+      pos: Int = 0) =
+        complete(base / "file" <<?
+                 Map("name" -> name, "start_pos" -> pos.toString) ++
+                     repo.map(("repo" -> _)))
 
-    def sha(sha: String, repo: Option[String] = None) =
-      complete(searchBase / "file" <<? Map("sha" -> sha) ++ repo.map(("repo" -> _)))
+    /** https://bintray.com/docs/rest/api.html#_file_search_by_checksum */
+    def sha(
+      sha: String, repo: Option[String] = None, pos: Int = 0) =
+        complete(base / "file" <<?
+                 Map("sha" -> sha, "start_pos" -> pos.toString) ++
+                     repo.map(("repo" -> _)))
 
-    def users(name: String) =
-      complete(searchBase / "users" <<? Map("name" -> name))
+    /** https://bintray.com/docs/rest/api.html#_user_search */
+    def users(name: String, pos: Int = 0) =
+      complete(base / "users" <<?
+               Map("name" -> name, "start_pos" -> pos.toString))
   }
 
+  /** https://bintray.com/docs/rest/api.html#_get_repositories */
   def repos(sub: String) =
     complete(apiHost / "repos" / sub)
 
