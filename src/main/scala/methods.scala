@@ -15,27 +15,30 @@ trait Methods { self: Requests =>
     case class Package(name: String) extends Client.Completion { 
       object Attrs {
         private def base = apiHost / "packages" / sub / repo / name / "attributes"
-        def values(name0: String, names: String*) =
-          complete(base <<? Map("names" -> (name0 +: names).mkString(",")))
-        def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
-          complete(base.POST << compact(render(AttrsJson(attrs))))
+        def apply(names: String*) =
+          complete(if (names.isEmpty) base else base <<? Map("names" -> names.mkString(",")))
+        def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) = {
+          val js = compact(render(AttrsJson(attrs)))
+          println("sending %s" format js)
+          complete(base.POST << js)
+        }
         def update[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
           complete(base.PATCH << compact(render(AttrsJson(attrs))))
-        def delete(name0: String, names: String*) =
-          complete(base.DELETE <<? Map("names" -> (name0 +: names).mkString(",")))
+        def delete(names: String*) =
+          complete(if (names.isEmpty) base.DELETE else base.DELETE <<? Map("names" -> names.mkString(",")))
       }
 
       case class Version(vers: String) extends Client.Completion {
         object Attrs {
-          def base = apiHost / "packages" / sub / repo / name / "versions" / vers / "attributes"
-          def values(name0: String, names: String*) =
-            complete(base <<? Map("names" -> (name0 +: names).mkString(",")))
+          private def base = apiHost / "packages" / sub / repo / name / "versions" / vers / "attributes"
+          def apply(names: String*) =
+            complete(if (names.isEmpty) base else base <<? Map("names" -> names.mkString(",")))
           def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
             complete(base.POST << compact(render(AttrsJson(attrs))))
           def update[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
             complete(base.PATCH << compact(render(AttrsJson(attrs))))
-          def delete(name0: String, names: String*) =
-            complete(base.DELETE <<? Map("names" -> (name0 +: names).mkString(",")))          
+          def delete(names: String*) =
+            complete(if (names.isEmpty) base.DELETE else base.DELETE <<? Map("names" -> names.mkString(",")))          
         }
 
         private def base = apiHost / "packages" / sub / repo / name / "versions" / vers
@@ -71,7 +74,7 @@ trait Methods { self: Requests =>
           complete(contentBase.POST / name / vers / "discard")
       }
 
-      def base = apiHost / "packages" / sub / repo / name
+      private def base = apiHost / "packages" / sub / repo / name
 
       override def apply[T](handler: Client.Handler[T]) =
         request(base)(handler)
