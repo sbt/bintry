@@ -15,13 +15,13 @@ trait Methods { self: Requests =>
     case class Package(name: String) extends Client.Completion { 
       object Attrs {
         private def base = apiHost / "packages" / sub / repo / name / "attributes"
-        def values(pkg: String, name0: String, names: String*) =
+        def values(name0: String, names: String*) =
           complete(base <<? Map("names" -> (name0 +: names).mkString(",")))
-
-        def set[A <: Attr[_]](pkg: String, attrs: Map[String, Iterable[A]]) =
+        def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
+          complete(base.POST << compact(render(AttrsJson(attrs))))
+        def update[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
           complete(base.PATCH << compact(render(AttrsJson(attrs))))
-
-        def delete(pkg: String, name0: String, names: String*) =
+        def delete(name0: String, names: String*) =
           complete(base.DELETE <<? Map("names" -> (name0 +: names).mkString(",")))
       }
 
@@ -30,9 +30,11 @@ trait Methods { self: Requests =>
           def base = apiHost / "packages" / sub / repo / name / "versions" / vers / "attributes"
           def values(name0: String, names: String*) =
             complete(base <<? Map("names" -> (name0 +: names).mkString(",")))
-          def set[A <: Attr[_]](pkg: String, version: String, attrs: Map[String, Iterable[A]]) =
-            complete(base.PATCH << compact(render(AttrsJson(attrs))))    
-          def delete(pkg: String, version: String, name0: String, names: String*) =
+          def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
+            complete(base.POST << compact(render(AttrsJson(attrs))))
+          def update[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
+            complete(base.PATCH << compact(render(AttrsJson(attrs))))
+          def delete(name0: String, names: String*) =
             complete(base.DELETE <<? Map("names" -> (name0 +: names).mkString(",")))          
         }
 
