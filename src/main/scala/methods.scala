@@ -71,7 +71,7 @@ trait Methods { self: Requests =>
           complete(contentBase.POST / name / vers / "publish")
 
         def discard =
-          complete(contentBase.POST / name / vers / "discard")
+          complete(contentBase.POST / name / vers / "publish" << compact(render("discard" -> true)))
       }
 
       private def base = apiHost / "packages" / sub / repo / name
@@ -98,12 +98,13 @@ trait Methods { self: Requests =>
                  compact(render(
                    ("name" -> version))))
 
-      def mvnUpload(pkg: String, path: String, content: File, publish: Boolean = false, explode: Boolean = false) =
-        complete(apiHost.PUT / "maven" / sub / repo / pkg /
-                 "%s;publish=%s;explode=%s"
-                   .format(path,
-                           if (publish) 1 else 0,
-                           if (explode) 1 else 0) <<< content)
+      def mvnUpload(pkg: String, path: String, content: File,
+                    publish: Boolean = false, explode: Boolean = false) =
+                      complete(apiHost.PUT / "maven" / sub / repo / pkg /
+                               "%s;publish=%s;explode=%s"
+                                 .format(path,
+                                         if (publish) 1 else 0,
+                                         if (explode) 1 else 0) <<< content)
     }
 
     private def base = apiHost / "repos" / sub / repo
