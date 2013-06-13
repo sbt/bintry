@@ -13,7 +13,6 @@ trait Methods { self: Requests =>
   case class Repo(sub: String, repo: String) extends Client.Completion {
 
     case class Package(name: String) extends Client.Completion { 
-      /** warning: this is a buggy part of the api */
       object Attrs {
         private def base = apiHost / "packages" / sub / repo / name / "attributes"
 
@@ -23,12 +22,12 @@ trait Methods { self: Requests =>
                    Map("names" -> names.mkString(",")))
 
         /** https://bintray.com/docs/rest/api.html#_set_attributes */
-        def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
-          complete(base.POST << compact(render(AttrsJson(attrs))))
+        def set[A <: Attr[_]](attrs: (String, Iterable[A])*) =
+          complete(base.POST << compact(render(AttrsToJson(attrs))))
 
         /** https://bintray.com/docs/rest/api.html#_update_attributes */
-        def update[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
-          complete(base.PATCH << compact(render(AttrsJson(attrs))))
+        def update[A <: Attr[_]](attrs: (String, Iterable[A])*) =
+          complete(base.PATCH << compact(render(AttrsToJson(attrs))))
 
         /** https://bintray.com/docs/rest/api.html#_delete_attributes */
         def delete(names: String*) =
@@ -37,7 +36,6 @@ trait Methods { self: Requests =>
       }
 
       case class Version(vers: String) extends Client.Completion {
-        /** warning: this is a buggy part of the api */
         object Attrs {
           private def base =
             apiHost / "packages" / sub / repo / name / "versions" / vers / "attributes"
@@ -48,12 +46,12 @@ trait Methods { self: Requests =>
                      Map("names" -> names.mkString(",")))
 
           /** https://bintray.com/docs/rest/api.html#_set_attributes */
-          def set[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
-            complete(base.POST << compact(render(AttrsJson(attrs))))
+          def set[A <: Attr[_]](attrs: (String, Iterable[A])*) =
+            complete(base.POST << compact(render(AttrsToJson(attrs))))
 
           /** https://bintray.com/docs/rest/api.html#_update_attributes */
-          def update[A <: Attr[_]](attrs: Map[String, Iterable[A]]) =
-            complete(base.PATCH << compact(render(AttrsJson(attrs))))
+          def update[A <: Attr[_]](attrs: (String, Iterable[A])*) =
+            complete(base.PATCH << compact(render(AttrsToJson(attrs))))
 
           /** https://bintray.com/docs/rest/api.html#_delete_attributes */
           def delete(names: String*) =

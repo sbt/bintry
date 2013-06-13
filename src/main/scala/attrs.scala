@@ -4,11 +4,11 @@ import java.util.Date
 import org.json4s._
 import org.json4s.JsonDSL._
 
-object AttrsJson {
-   def apply[A <: Attr[_]](attrs: Map[String, Iterable[A]]): JValue =
-     (JObject() /: attrs) {
-       case (js, (name, values)) =>
-         js ~ (("name" -> name) ~ {
+object AttrsToJson {
+   def apply[A <: Attr[_]](attrs: Iterable[(String, Iterable[A])]): JValue =
+     attrs.map {
+       case (name, values) =>
+         (("name" -> name) ~ {
            val tpe = values.headOption.map(_.tpe).getOrElse("string")
            ("type" -> tpe) ~ ("values" -> 
              values.map(_ match {
@@ -20,6 +20,26 @@ object AttrsJson {
              }))
          })
      }
+}
+
+
+object AttrsFromJson {
+  def apply(js: JValue): Map[String, Iterable[Attr[_]]] =
+    (for {
+      JArray(ary) <- js
+      JObject(fs) <- ary
+      ("name", JString(name)) <- fs
+      ("type", JString(tpe)) <- fs
+      ("values", JArray(values)) <- fs
+    } yield
+      (name, (tpe match {
+        case "string"  => for { JString(str)  <- values } yield StringAttr(str)
+        case "number"  => for { JInt(num)     <- values } yield IntAttr(num.toInt)
+        case "date"    => for { JString(date) <- values } yield DateAttr(new Date()) // todo
+        case "version" => for { JString(ver)  <- values } yield VersionAttr(ver)
+        case "boolean" => for { JBool(bool)   <- values } yield BooleanAttr(bool)
+        case _ => Nil
+      }): Iterable[Attr[_]])).toMap
 }
 
 sealed trait Attr[T] {
