@@ -15,13 +15,12 @@ object AttrsToJson {
                case StringAttr(value)  => JString(value)
                case IntAttr(value)     => JInt(value)
                case BooleanAttr(value) => JBool(value)
-               case DateAttr(value)    => JString(value.toString) // todo: format
+               case DateAttr(value)    => JString(value.toString) // todo: ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ)
                case VersionAttr(value) => JString(value)
              }))
          })
      }
 }
-
 
 object AttrsFromJson {
   def apply(js: JValue): Map[String, Iterable[Attr[_]]] =
@@ -35,7 +34,7 @@ object AttrsFromJson {
       (name, (tpe match {
         case "string"  => for { JString(str)  <- values } yield StringAttr(str)
         case "number"  => for { JInt(num)     <- values } yield IntAttr(num.toInt)
-        case "date"    => for { JString(date) <- values } yield DateAttr(new Date()) // todo
+        case "date"    => for { JString(date) <- values } yield DateAttr(new Date()) // todo ( ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ) )
         case "version" => for { JString(ver)  <- values } yield VersionAttr(ver)
         case "boolean" => for { JBool(bool)   <- values } yield BooleanAttr(bool)
         case _ => Nil
