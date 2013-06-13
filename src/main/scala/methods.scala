@@ -119,10 +119,14 @@ trait Methods { self: Requests =>
         Version(version)
 
       /** https://bintray.com/docs/rest/api.html#_create_version */
-      def createVersion(version: String) =
+      def createVersion(
+        version: String, notes: Option[String] = None,
+        readme: Option[String] = None) =
         complete(base.POST / "versions" <<
                  compact(render(
-                   ("name" -> version))))
+                   ("name" -> version) ~
+                   ("release_notes" -> notes.map(JString(_)).getOrElse(JNothing)) ~
+                   ("release_url" -> readme.map(JString(_)).getOrElse(JNothing)))))
 
       /** https://bintray.com/docs/rest/api.html#_maven_upload */
       def mvnUpload(pkg: String, path: String, content: File,
