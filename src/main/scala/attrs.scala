@@ -4,18 +4,29 @@ import java.util.Date
 import org.json4s._
 import org.json4s.JsonDSL._
 
+import java.text.SimpleDateFormat
+
+object Iso8601 {
+  val FMT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+  def formatter = new SimpleDateFormat(FMT)
+  def apply(d: Date) =
+    formatter.format(d)
+  def apply(str: String) =
+    formatter.parse(str)
+}
+
 object AttrsToJson {
    def apply[A <: Attr[_]](attrs: Iterable[(String, Iterable[A])]): JValue =
      attrs.map {
        case (name, values) =>
          (("name" -> name) ~ {
            val tpe = values.headOption.map(_.tpe).getOrElse("string")
-           ("type" -> tpe) ~ ("values" -> 
+           ("type" -> tpe) ~ ("values" ->
              values.map(_ match {
                case StringAttr(value)  => JString(value)
                case IntAttr(value)     => JInt(value)
                case BooleanAttr(value) => JBool(value)
-               case DateAttr(value)    => JString(value.toString) // todo: ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ)
+               case DateAttr(value)    => JString(Iso8601(value)) // todo: ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ)
                case VersionAttr(value) => JString(value)
              }))
          })
@@ -34,7 +45,7 @@ object AttrsFromJson {
       (name, (tpe match {
         case "string"  => for { JString(str)  <- values } yield StringAttr(str)
         case "number"  => for { JInt(num)     <- values } yield IntAttr(num.toInt)
-        case "date"    => for { JString(date) <- values } yield DateAttr(new Date()) // todo ( ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ) )
+        case "date"    => for { JString(date) <- values } yield DateAttr(Iso8601(date)) // todo ( ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ) )
         case "version" => for { JString(ver)  <- values } yield VersionAttr(ver)
         case "boolean" => for { JBool(bool)   <- values } yield BooleanAttr(bool)
         case _ => Nil
