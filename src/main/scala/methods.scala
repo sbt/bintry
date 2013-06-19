@@ -132,9 +132,9 @@ trait Methods { self: Requests =>
                    ("release_url" -> readme.map(JString(_)).getOrElse(JNothing)))))
 
       /** https://bintray.com/docs/rest/api.html#_maven_upload */
-      def mvnUpload(pkg: String, path: String, content: File,
+      def mvnUpload(path: String, content: File,
                     publish: Boolean = false, explode: Boolean = false) =
-                      complete(apiHost.PUT / "maven" / sub / repo / pkg /
+                      complete(apiHost.PUT / "maven" / sub / repo / name /
                                "%s;publish=%s;explode=%s"
                                  .format(path,
                                          if (publish) 1 else 0,
