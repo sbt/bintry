@@ -1,3 +1,5 @@
 ## initial release
 
 Bintry is a small [dispatch](http://dispatch.databinder.net/) interface for [bintray.com](https://bintray.com/)'s [api](https://bintray.com/docs/rest/api.html), a useful tool to have in your toolbox if you always be publishin`.
+
+For more information see the project [readme](https://github.com/softprops/bintry#readme)
