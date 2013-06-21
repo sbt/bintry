@@ -6,9 +6,17 @@ A scala interface for the [bintray](https://bintray.com) [api](https://bintray.c
 
 # install
 
+## copy and paste method
+
 add the following to your sbt build definition
 
     libraryDependencies += "me.lessis" %% "bintry" % "0.1.0"
+
+## civilized method
+
+using [ls](https://github.com/softprops/ls#readme)
+
+    ls install bintry
 
 # usage
 
