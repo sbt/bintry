@@ -36,6 +36,6 @@ repo.get("foo").createVersion("0.1.0")(as.json4s.Json)
 ```scala
 repo.get("foo").version("0.1.0")
                .upload("/baz", file("foo_2.10"),
-```                    publish = true)(as.json4s.Json)
-
+                      publish = true)(as.json4s.Json)
+```
 Doug Tangren (softprops) 2013
