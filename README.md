@@ -16,7 +16,7 @@ add the following to your sbt build definition
 
 using [ls](https://github.com/softprops/ls#readme)
 
-    ls install bintry
+    ls-install bintry
 
 # usage
 
