@@ -4,6 +4,8 @@ name := "bintry"
 
 version := "0.1.0"
 
+description := "your packages, delivered fresh"
+
 crossScalaVersions := Seq("2.9.3", "2.10.0", "2.10.1")
 
 scalaVersion := "2.9.3"
@@ -34,3 +36,8 @@ pomExtra := (
       <url>https://github.com/softprops</url>
     </developer>
   </developers>)
+
+
+seq(lsSettings:_*)
+
+(LsKeys.tags in LsKeys.lsync) := Seq("bintray", "dispatch", "http")
