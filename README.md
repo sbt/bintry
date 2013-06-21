@@ -2,7 +2,13 @@
 
 your packages, delivered fresh
 
-A jvm interface for the [bintray](https://bintray.com) [api](https://bintray.com/docs/rest/api.html).
+A scala interface for the [bintray](https://bintray.com) [api](https://bintray.com/docs/rest/api.html).
+
+# install
+
+add the following to your sbt build definition
+
+    libraryDependencies += "me.lessis" %% "bintry" % "0.1.0"
 
 # usage
 
@@ -10,24 +16,26 @@ A jvm interface for the [bintray](https://bintray.com) [api](https://bintray.com
 import bintry._, dispatch._, dispatch.Defaults._, org.json4s._
 val bty = Client(user, apikey)
 val repo = bty.repo(user, "generic")
-for {
-  // create a package
-  pkg <- repo.createPackage("foo", "blah")(as.json4s.Json)
-  // create a version
-  ver   <- repo.get("foo").createVersion("0.1.0")(as.json4s.Json)
-  // upload & publish it
-  _   <- repo.get("foo").version("0.1.0")
-                        .upload("/baz", file("foo_2.10"),
-                                publish = true)(identity)
-  // do with it what you will
-  JObject(pfs) <- pkg
-  ("name", JString(package)) <- pfs
-  JObject(vfs) <- ver
-  ("name", JString(version)) <- vfs
-} yield {
-  println("hell yeah you just released %s version %s"
-            .format(package, version))
-}
 ```
+
+## create a package
+
+```scala
+repo.createPackage("foo", "blah")(as.json4s.Json)
+```
+
+
+## create a version
+
+```scala
+repo.get("foo").createVersion("0.1.0")(as.json4s.Json)
+```
+
+## upload & publish it
+
+```scala
+repo.get("foo").version("0.1.0")
+               .upload("/baz", file("foo_2.10"),
+```                    publish = true)(as.json4s.Json)
 
 Doug Tangren (softprops) 2013
