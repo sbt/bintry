@@ -29,7 +29,7 @@ val repo = bty.repo(user, "generic")
 ## create a package
 
 ```scala
-repo.createPackage("foo", "blah")(as.json4s.Json)
+repo.createPackage("my-awesome-package", "description of my awesome package", Seq("MIT"))(as.json4s.Json)
 ```
 
 
