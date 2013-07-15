@@ -38,13 +38,13 @@ repo.createPackage("my-awesome-package",
 ## create a version
 
 ```scala
-repo.get("foo").createVersion("0.1.0")(as.json4s.Json)
+repo.get("my-awesome-package").createVersion("0.1.0")(as.json4s.Json)
 ```
 
 ## upload & publish it
 
 ```scala
-repo.get("foo").version("0.1.0")
+repo.get("my-awesome-package").version("0.1.0")
                .upload("/baz", file("foo_2.10"),
                       publish = true)(as.json4s.Json)
 ```
