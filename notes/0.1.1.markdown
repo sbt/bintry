@@ -1,6 +1,6 @@
 ## fixes for changes in api requirements
 
-The bintray api now requires a license when [creating package](https://bintray.com/docs/api.html#_create_package) and must be one they [define](https://bintray.com/docs/api.html#availableLicenses). Bintry's interface now accounts for this with `bintray.Licenses.Names` which defines a set of acceptable license names and an updated create package interface.
+The bintray api now requires a license when [creating package](https://bintray.com/docs/api.html#_create_package) and must be one they [define](https://bintray.com/docs/api.html#availableLicenses). Bintry's interface now accounts for this with `bintray.Licenses.Names`, which defines a set of acceptable license names and an updated `createPackage` interface.
 
 ```scala
 import bintry._
@@ -9,7 +9,7 @@ Client(user, key).repo(user, repo).createPackage(name, desc, listOfLicenses, lab
 
 ## attr queries
 
-Bintray recently added an interface for searching for packages and package versions by attributes. Bintry now supports a subset of those queries.
+Bintray recently added an interface for searching for packages and package versions by attributes. Bintry now supports a subset of those types of queries.
 
 ```scala
 import bintry._
