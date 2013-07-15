@@ -2,7 +2,7 @@
 
 your packages, delivered fresh
 
-A scala interface for the [bintray](https://bintray.com) [api](https://bintray.com/docs/rest/api.html).
+A scala interface for the [bintray](https://bintray.com) [api](https://bintray.com/docs/api.html).
 
 # install
 
@@ -46,4 +46,12 @@ repo.get("foo").version("0.1.0")
                .upload("/baz", file("foo_2.10"),
                       publish = true)(as.json4s.Json)
 ```
+
+## metadata
+
+You can assign typed metadata as [attributes](https://bintray.com/docs/api.html#_attributes) to packages and versions.
+Bintray expects these to be of type `string`, `date`, `number`, `boolean` or `version`. Bintry exposes these types as
+`StringAttr(stringVal)`, `DateAttr(java.util.Date)`, `IntAttr(intVal)`, `BooleanAttr(boolVal)` and  `VersionAttr(stringVal)` respectively.
+
+
 Doug Tangren (softprops) 2013
