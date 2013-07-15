@@ -1,24 +1,36 @@
-## fixes for changes in api requirements
+## fixes for changes in new api requirements
 
-The bintray api now requires a license when [creating package](https://bintray.com/docs/api.html#_create_package) and must be one they [define](https://bintray.com/docs/api.html#availableLicenses). Bintry's interface now accounts for this with `bintray.Licenses.Names`, which defines a set of acceptable license names and an updated `createPackage` interface.
+The bintray api now requires a license when [creating package](https://bintray.com/docs/api.html#_create_package) and must be one they [define](https://bintray.com/docs/api.html#availableLicenses).
 
-```scala
-import bintry._
-Client(user, key).repo(user, repo).createPackage(name, desc, listOfLicenses, labela, labelb)
-```
+Bintry's interface now accounts for this with `bintry.Licenses.Names`, which defines the set of acceptable license names and an updated `createPackage` interface which takes a list of licenses.
 
-## attr queries
+    import bintry._
+    Client(user, key).repo(user, repo)
+                     .createPackage(name, desc,
+                                    listOfLicenses,
+                                    labela, labelb)
+
+## attribute queries
 
 Bintray recently added an interface for searching for packages and package versions by attributes. Bintry now supports a subset of those types of queries.
 
-```scala
-import bintry._
-val packages = Client(user, key).search.attributes.ofPackages(user, repo).is(name, attr)(as.json4s.Json)()
-```
+To search for packages use
 
-```scala
-import bintry._
-val versions = Client(user, repo).search.attributes.ofPackageVersions(user, repo, pkg).is(name, attr)(as.json4s.Json)()
-```
+    import bintry._
+    val packages =
+      Client(user, key).search
+                       .attributes
+                       .ofPackages(user, repo)
+                       .is(name, attr)(as.json4s.Json)()
+
+To search for versions use
+
+    import bintry._
+    val versions =
+      Client(user, repo).search
+                        .attributes
+                        .ofPackageVersions(user, repo, pkg)
+                        .is(name, attr)(as.json4s.Json)()
+
 
 For more information on attribute metadata see the project [readme](https://github.com/softprops/bintry#metadata)
