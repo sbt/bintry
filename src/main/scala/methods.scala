@@ -155,7 +155,8 @@ trait Methods { self: Requests =>
     def get(pkg: String) =
       Package(pkg)
 
-    /** https://bintray.com/docs/api.html#_create_package */
+    /** https://bintray.com/docs/api.html#_create_package
+     *  the provided licenses should be defined under Licenses.Names */
     def createPackage(name: String, desc: String, licenses: Seq[String], labels: String*) =
       complete(packagesBase.POST <<
                compact(render(
