@@ -2,7 +2,7 @@
 
 The bintray api now requires a license when [creating package](https://bintray.com/docs/api.html#_create_package) and must be one they [define](https://bintray.com/docs/api.html#availableLicenses).
 
-Bintry's interface now accounts for this with `bintry.Licenses.Names`, which defines the set of acceptable license names and an updated `createPackage` interface which takes a list of licenses.
+Bintry's interface now accounts for this with `bintry.Licenses.Names`, which defines the set of acceptable license names and an updated `createPackage` interface which takes a list of license names.
 
     import bintry._
     Client(user, key).repo(user, repo)
