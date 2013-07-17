@@ -35,6 +35,18 @@ trait Methods { self: Requests =>
                    Map("names" -> names.mkString(",")))
       }
 
+      private def publishPath(
+        path: String, publish: Boolean, explode: Boolean) =
+          "%s;publish=%s;explode=%s".format(
+            path,
+            if (publish) 1 else 0,
+            if (explode) 1 else 0)
+
+      private def appendPath(rb: RequestBuilder, path: String) =
+        (rb /: path.split('/')) {
+          case (req, seg) => if (seg.isEmpty) rb else rb / seg
+        }
+
       case class Version(vers: String) extends Client.Completion {
         object Attrs {
           private def base =
@@ -80,15 +92,13 @@ trait Methods { self: Requests =>
         def attrs = Attrs
 
         /** https://bintray.com/docs/api.html#_upload_content */
-        def upload(path: String, content: File,
-                   publish: Boolean = false, explode: Boolean = false) =
-                     complete(contentBase.PUT / "%s;publish=%s;explode=%s".format(
-                       path,
-                       if (publish) 1 else 0,
-                       if (explode) 1 else 0) <:< Map(
-                         "X-Bintray-Package" -> name,
-                         "X-Bintray-Version" -> vers
-                       ) <<< content)
+        def upload(
+          path: String, content: File,
+          publish: Boolean = false, explode: Boolean = false) =
+            complete(appendPath(contentBase.PUT, publishPath(path, publish, explode)) <:< Map(
+              "X-Bintray-Package" -> name,
+              "X-Bintray-Version" -> vers
+            ) <<< content)
 
         /** https://bintray.com/docs/api.html#_publish_discard_uploaded_content */
         def publish =
@@ -132,13 +142,11 @@ trait Methods { self: Requests =>
                    ("release_url" -> readme.map(JString(_)).getOrElse(JNothing)))))
 
       /** https://bintray.com/docs/api.html#_maven_upload */
-      def mvnUpload(path: String, content: File,
-                    publish: Boolean = false, explode: Boolean = false) =
-                      complete(apiHost.PUT / "maven" / sub / repo / name /
-                               "%s;publish=%s;explode=%s"
-                                 .format(path,
-                                         if (publish) 1 else 0,
-                                         if (explode) 1 else 0) <<< content)
+      def mvnUpload(
+        path: String, content: File,
+        publish: Boolean = false, explode: Boolean = false) =
+        complete(appendPath(apiHost.PUT / "maven" / sub / repo / name, 
+                            publishPath(path, publish, explode)) <<< content)
     }
 
     private def base = apiHost / "repos" / sub / repo
