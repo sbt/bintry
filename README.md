@@ -11,7 +11,7 @@ A scala interface for the [bintray](https://bintray.com) [api](https://bintray.c
 add the following to your sbt build definition
 
 ```scala
-libraryDependencies += "me.lessis" %% "bintry" % "0.1.0"
+libraryDependencies += "me.lessis" %% "bintry" % "0.1.2"
 ```
 
 ## civilized method
