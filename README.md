@@ -22,6 +22,8 @@ using [ls](https://github.com/softprops/ls#readme)
 
 # usage
 
+Create a new bintry `Client` with your bintray username and api key ( which can be found [here](https://bintray.com/profile/edit) )
+
 ```scala
 import bintry._, dispatch._, dispatch.Defaults._, org.json4s._
 val bty = Client(user, apikey)
