@@ -1,6 +1,6 @@
 package bintry
 
-import com.ning.http.client.{ AsyncHandler, RequestBuilder }
+import com.ning.http.client.AsyncHandler
 import dispatch._, dispatch.Defaults._
 import scala.concurrent.Future
 
@@ -16,11 +16,11 @@ abstract class Requests(
   extends DefaultHosts
   with Methods {
 
-  def request[T](req: RequestBuilder)
+  def request[T](req: Req)
                 (handler: Client.Handler[T]): Future[T] =
     http(credentials.sign(req) > handler)
 
-  def complete(req: RequestBuilder): Client.Completion =
+  def complete(req: Req): Client.Completion =
     new Client.Completion {
       override def apply[T](handler: Client.Handler[T]) =
         request(req)(handler)

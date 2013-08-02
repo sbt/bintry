@@ -1,10 +1,9 @@
 package bintry
 
-import com.ning.http.client.RequestBuilder
 import dispatch._
 
 trait Hosts {
-  def apiHost: RequestBuilder
+  def apiHost: Req
 }
 
 trait DefaultHosts extends Hosts {

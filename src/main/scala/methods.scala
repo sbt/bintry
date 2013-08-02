@@ -1,6 +1,5 @@
 package bintry
 
-import com.ning.http.client.RequestBuilder
 import dispatch._
 import org.json4s._
 import org.json4s.JsonDSL._
@@ -12,7 +11,7 @@ trait Methods { self: Requests =>
 
   case class Repo(sub: String, repo: String) extends Client.Completion {
 
-    case class Package(name: String) extends Client.Completion { 
+    case class Package(name: String) extends Client.Completion {
       object Attrs {
         private def base = apiHost / "packages" / sub / repo / name / "attributes"
 
@@ -42,7 +41,7 @@ trait Methods { self: Requests =>
             if (publish) 1 else 0,
             if (explode) 1 else 0)
 
-      private def appendPath(rb: RequestBuilder, path: String) =
+      private def appendPath(rb: Req, path: String) =
         (rb /: path.split('/')) {
           case (req, seg) => if (seg.isEmpty) rb else rb / seg
         }
@@ -68,7 +67,7 @@ trait Methods { self: Requests =>
           /** https://bintray.com/docs/api.html#_delete_attributes */
           def delete(names: String*) =
             complete(if (names.isEmpty) base.DELETE else base.DELETE <<?
-                     Map("names" -> names.mkString(",")))          
+                     Map("names" -> names.mkString(",")))
         }
 
         private def base =
@@ -145,7 +144,7 @@ trait Methods { self: Requests =>
       def mvnUpload(
         path: String, content: File,
         publish: Boolean = false, explode: Boolean = false) =
-        complete(appendPath(apiHost.PUT / "maven" / sub / repo / name, 
+        complete(appendPath(apiHost.PUT / "maven" / sub / repo / name,
                             publishPath(path, publish, explode)) <<< content)
     }
 
@@ -226,7 +225,7 @@ trait Methods { self: Requests =>
     class AttributeSearch {
       val base = apiHost / "search" / "attributes"
       case class SearchTarget(
-        endpoint: RequestBuilder,
+        endpoint: Req,
         _queries: Seq[(String, AttrQuery[_])] =
           Seq.empty[(String, AttrQuery[_])])
         extends Client.Completion {
