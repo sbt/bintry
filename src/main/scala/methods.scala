@@ -41,9 +41,9 @@ trait Methods { self: Requests =>
             if (publish) 1 else 0,
             if (explode) 1 else 0)
 
-      private def appendPath(rb: Req, path: String) =
-        (rb /: path.split('/')) {
-          case (req, seg) => if (seg.isEmpty) rb else rb / seg
+      private def appendPath(to: Req, path: String) =
+        (to /: path.split('/')) {
+          case (req, seg) => if (seg.isEmpty) req else req / seg
         }
 
       case class Version(vers: String) extends Client.Completion {
@@ -94,7 +94,9 @@ trait Methods { self: Requests =>
         def upload(
           path: String, content: File,
           publish: Boolean = false, explode: Boolean = false) =
-            complete(appendPath(contentBase.PUT, publishPath(path, publish, explode)) <:< Map(
+            complete(appendPath(
+              contentBase.PUT,
+              publishPath(path, publish, explode)) <:< Map(
               "X-Bintray-Package" -> name,
               "X-Bintray-Version" -> vers
             ) <<< content)
@@ -140,7 +142,10 @@ trait Methods { self: Requests =>
                    ("release_notes" -> notes.map(JString(_)).getOrElse(JNothing)) ~
                    ("release_url" -> readme.map(JString(_)).getOrElse(JNothing)))))
 
-      /** https://bintray.com/docs/api.html#_maven_upload */
+      /** https://bintray.com/docs/api.html#_maven_upload
+       *  path should be in standard mvn format
+       *  i.e. com/org/name/version/name-version.pom
+       */
       def mvnUpload(
         path: String, content: File,
         publish: Boolean = false, explode: Boolean = false) =
