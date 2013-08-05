@@ -1,0 +1,7 @@
+## dependency updates
+
+upgraded to dispatch 0.11.0 which changed it's interface type for request building.
+
+## fixes
+
+Fixed issue with upload paths
