@@ -1,6 +1,6 @@
-## dependency updates
+## Dependency updates
 
-upgraded to dispatch 0.11.0 which changed it's interface type for request building.
+Upgraded to dispatch 0.11.0.
 
 ## fixes
 
