@@ -123,6 +123,7 @@ trait Methods { self: Requests =>
 
         /** https://bintray.com/docs/api.html#_gpg_sign_a_version
          *  see also http://blog.bintray.com/2013/08/06/fight-crime-with-gpg/
+         *  see also https://bintray.com/docs/uploads/uploads_gpgsigning.html
          */
         def sign(passphrase: String) =
           complete(apiHost.POST / "gpg" / subject / repo / name / "versions" / version <<
@@ -253,6 +254,7 @@ trait Methods { self: Requests =>
 
     /** https://bintray.com/docs/api.html#_gpg_sign_a_file
      *  see also http://blog.bintray.com/2013/08/06/fight-crime-with-gpg/
+     *  see also https://bintray.com/docs/uploads/uploads_gpgsigning.html
      */
     def sign(passphrase: String, path: String) =
       complete(appendPath(apiHost.POST / "gpg" / subject / repo, path) <<
