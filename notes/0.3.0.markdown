@@ -2,7 +2,8 @@
 
 * Added support to [sync to mvn central](https://bintray.com/docs/api.html#_sync_version_artifacts_to_maven_central)
 
-Enjoy Bintray's new [syncing](http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/) feature.
+Enjoy Bintray's new [syncing](http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/) feature. Note, you 
+may need to adjust your build definition to meet the [requirements](https://docs.sonatype.org/display/Repository/Central+Sync+Requirements) for a maven central sync.
 
     import bintry._
     Client(user, pass).repo(sub, repo).get(pkg).version(vers)(sonauser, sonapassword, close = true)()
