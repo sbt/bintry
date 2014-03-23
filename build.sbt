@@ -6,8 +6,7 @@ version := "0.3.0-SNAPSHOT"
 
 description := "your packages, delivered fresh"
 
-// We need the latest scala version on a BC series
-crossScalaVersions := Seq("2.9.3", "2.10.2")
+crossScalaVersions := Seq("2.9.3", "2.10.3")
 
 scalaVersion <<= crossScalaVersions apply (_.head)
 
@@ -19,11 +18,10 @@ publishMavenStyle := true
 
 publishArtifact in Test := false
 
-licenses <<= (version)(v =>
-      Seq("MIT" ->
-          url("https://github.com/softprops/bintry/blob/%s/LICENSE" format v)))
+licenses := Seq("MIT" ->
+                url(s"https://github.com/softprops/${name.value}/blob/${version.value}/LICENSE"))
 
-homepage := some(url("https://github.com/softprops/bintry/#readme"))
+homepage := some(url(s"https://github.com/softprops/${name.value}/#readme"))
 
 pomExtra := (
   <scm>
@@ -42,4 +40,3 @@ pomExtra := (
 lsSettings
 
 (LsKeys.tags in LsKeys.lsync) := Seq("bintray", "dispatch", "http")
-
