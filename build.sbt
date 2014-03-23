@@ -6,9 +6,10 @@ version := "0.2.0"
 
 description := "your packages, delivered fresh"
 
-crossScalaVersions := Seq("2.9.3", "2.10.0", "2.10.1")
+// We need the latest scala version on a BC series
+crossScalaVersions := Seq("2.9.3", "2.10.2")
 
-scalaVersion := "2.9.3"
+scalaVersion <<= crossScalaVersions apply (_.head)
 
 libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.0")
 
@@ -38,6 +39,7 @@ pomExtra := (
   </developers>)
 
 
-seq(lsSettings:_*)
+lsSettings
 
 (LsKeys.tags in LsKeys.lsync) := Seq("bintray", "dispatch", "http")
+
