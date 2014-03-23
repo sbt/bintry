@@ -2,10 +2,14 @@
 
 * Added support to [sync to mvn central](https://bintray.com/docs/api.html#_sync_version_artifacts_to_maven_central)
 
+Enjoy Bintray's new [syncing](http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/) feature.
+
     import bintry._
-    Client(user, pass).repo(sub, repo).get(pkg).version(vers)(sonauser, sonapass, close = true)()
+    Client(user, pass).repo(sub, repo).get(pkg).version(vers)(sonauser, sonapassword, close = true)()
     
 * Added support for pgp signing for [versions](https://bintray.com/docs/api.html#_gpg_sign_a_version) and [files](https://bintray.com/docs/api.html#_gpg_sign_a_file)
+
+Feel at easy with Bintray's [hosted pgp signing feature](http://blog.bintray.com/2013/08/06/fight-crime-with-gpg/)
 
     import bintry._
     Client(user, pass).repo(sub, repo).get(pkg).version(vers).sign(passphrase)()
