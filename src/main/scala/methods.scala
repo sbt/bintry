@@ -199,8 +199,10 @@ trait Methods { self: Requests =>
 
       def attrs = Attrs
 
-      def version(version: String = "_latest") =
+      def version(version: String) =
         Version(version)
+
+      def latest = version("_latest")
 
       /** https://bintray.com/docs/api.html#_create_version */
       def createVersion(
