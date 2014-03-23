@@ -8,8 +8,31 @@ import org.json4s.native.JsonMethods.render
 import java.io.File
 
 trait Methods { self: Requests =>
-
+  import bintry.Util._
   case class Repo(sub: String, repo: String) extends Client.Completion {
+
+    case class PackageCreate(
+      name: String,
+      _desc: Option[String] = None,
+      _labels: List[String] = Nil,
+      _licenses: List[String] = Nil,
+      _vcs: Option[String] = None)
+      extends Client.Completion {
+      def desc(d: String) = copy(_desc = Some(d))
+      def labels(ls: String*) = copy(_labels = ls.toList)
+      def licences(ls: String*) = copy(_licenses = ls.toList)
+      def vcs(url: String) = copy(_vcs = Some(url))
+
+      /** https://bintray.com/docs/api.html#_create_package */
+      override def apply[T](handler: Client.Handler[T]) =
+        request((apiHost / "packages" / sub / repo).POST <<
+               compact(render(
+                 ("name"     -> name) ~
+                 ("desc"     -> _desc) ~
+                 ("licenses" -> _licenses) ~
+                 ("labels"   -> _labels) ~
+                 ("vcs_url"  -> _vcs))))(handler)
+    }
 
     case class Package(name: String) extends Client.Completion {
       object Attrs {
@@ -34,17 +57,12 @@ trait Methods { self: Requests =>
                    Map("names" -> names.mkString(",")))
       }
 
-      private def publishPath(
+      private[this] def publishPath(
         path: String, publish: Boolean, explode: Boolean) =
           "%s;publish=%s;explode=%s".format(
             path,
             if (publish) 1 else 0,
             if (explode) 1 else 0)
-
-      private def appendPath(to: Req, path: String) =
-        (to /: path.split('/')) {
-          case (req, seg) => if (seg.isEmpty) req else req / seg
-        }
 
       case class Version(vers: String) extends Client.Completion {
         object Attrs {
@@ -70,14 +88,26 @@ trait Methods { self: Requests =>
                      Map("names" -> names.mkString(",")))
         }
 
-        private def base =
+        private[this] def base =
           apiHost / "packages" / sub / repo / name / "versions" / vers
 
-        private def contentBase = apiHost / "content" / sub / repo
+        private[this] def contentBase = apiHost / "content" / sub / repo
 
         /** https://bintray.com/docs/api.html#_get_version */
         override def apply[T](handler: Client.Handler[T]) =
           request(base)(handler)
+
+        /** https://bintray.com/docs/api.html#_gpg_sign_a_version */
+        def sign(passphrase: String) =
+          complete(apiHost.POST / "gpg" / sub / repo / name / "versions" / vers <<
+                   compact(render(("passphrase" -> passphrase))))
+
+        /** https://bintray.com/docs/api.html#_sync_version_artifacts_to_maven_central */
+        def sync(sonatypeUser: String, sonatypePassword: String, close: Boolean = false) =
+          complete(apiHost.POST / "maven_central_sync" / sub / repo / name / "versions" / vers <<
+                 compact(render(("username" -> sonatypeUser) ~
+                                ("password" -> sonatypePassword) ~
+                                ("close"    -> Some("1").filter(Function.const(close))))))
 
         /** https://bintray.com/docs/api.html#_delete_version */
         def delete =
@@ -87,7 +117,7 @@ trait Methods { self: Requests =>
         def update(desc: String) =
           complete(base.PATCH <<
                    compact(render(("desc" -> desc))))
-
+        
         def attrs = Attrs
 
         /** https://bintray.com/docs/api.html#_upload_content */
@@ -110,7 +140,15 @@ trait Methods { self: Requests =>
           complete(contentBase.POST / name / vers / "publish" << compact(render("discard" -> true)))
       }
 
-      private def base = apiHost / "packages" / sub / repo / name
+      object Logs extends Client.Completion {
+        private[this] def logsBase = apiHost / "packages" / sub / repo / name / "logs"
+        def apply[T](handler: Client.Handler[T]) =
+          request(logsBase)(handler)
+        def log(name: String) =
+          complete(logsBase / name)
+      }
+
+      private[this] def base = apiHost / "packages" / sub / repo / name
 
       /** https://bintray.com/docs/api.html#_get_package */
       override def apply[T](handler: Client.Handler[T]) =
@@ -151,11 +189,16 @@ trait Methods { self: Requests =>
         publish: Boolean = false, explode: Boolean = false) =
         complete(appendPath(apiHost.PUT / "maven" / sub / repo / name,
                             publishPath(path, publish, explode)) <<< content)
+
+      def logs =
+        Logs
     }
 
-    private def base = apiHost / "repos" / sub / repo
+    private[this] def base = apiHost / "repos" / sub / repo
 
-    private def packagesBase = apiHost / "packages" / sub / repo
+    private[this] def packagesBase = apiHost / "packages" / sub / repo
+
+    private[this] def linkBase = apiHost / "repository" / sub / repo / "links"
 
     override def apply[T](handler: Client.Handler[T]) =
       request(base)(handler)
@@ -164,18 +207,26 @@ trait Methods { self: Requests =>
     def packages(pos: Int = 0) =
       complete(base / "packages" <<? Map("start_pos" -> pos.toString))
 
+    /** https://bintray.com/docs/api.html#_link_package */
+    def link(subject: String, repo: String, pkg: String) = 
+      complete(linkBase.PUT / subject / repo / pkg)
+
+    /** https://bintray.com/docs/api.html#_unlink_package */
+    def unlink(subject: String, repo: String, pkg: String) =
+      complete(linkBase.DELETE / subject / repo / pkg)
+
     def get(pkg: String) =
       Package(pkg)
 
     /** https://bintray.com/docs/api.html#_create_package
      *  the provided licenses should be defined under Licenses.Names */
-    def createPackage(name: String, desc: String, licenses: Seq[String], labels: String*) =
-      complete(packagesBase.POST <<
-               compact(render(
-                 ("name" -> name) ~
-                 ("desc" -> desc) ~
-                 ("licenses" -> licenses) ~
-                 ("labels" -> labels.toList))))
+    def createPackage(name: String) =
+      PackageCreate(name)
+
+    /** https://bintray.com/docs/api.html#_gpg_sign_a_file */
+    def sign(passphrase: String, path: String) =
+      complete(appendPath(apiHost.POST / "gpg" / sub / repo, path) <<
+               compact(render(("passphrase" -> passphrase))))      
   }
 
   case class User(user: String) extends Client.Completion {
@@ -190,7 +241,8 @@ trait Methods { self: Requests =>
       complete(base / "followers" <<? Map("start_pos" -> pos.toString))
   }
 
-  case class Webhooks(sub: String, repo: Option[String] = None) extends Client.Completion {
+  case class Webhooks(sub: String, repo: Option[String] = None)
+    extends Client.Completion {
     sealed trait Method
     object POST extends Method
     object PUT extends Method
