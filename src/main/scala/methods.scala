@@ -66,11 +66,32 @@ trait Methods { self: Requests =>
             if (publish) 1 else 0,
             if (explode) 1 else 0)
 
+      /** https://bintray.com/docs/api.html#_create_version */
+      case class CreateVersion(
+        version: String,
+        _desc: Option[String]   = None,
+        _vcsTag: Option[String] = None,
+        _notes: Option[String]  = None,
+        _readme: Option[String] = None) extends Client.Completion {
+        def desc(d: String) = copy(_desc = Some(d))
+        def vcsTag(tag: String) = copy(_vcsTag = Some(tag))
+        def notes(n: String) = copy(_notes = Some(n))
+        def readme(rm: String) = copy(_readme = Some(rm))
+        def apply[T](handler: Client.Handler[T]) =
+          request(pkgBase.POST / "versions" <<
+                  compact(render(
+                   ("name"          -> version) ~
+                   ("desc"          -> _desc)   ~
+                   ("release_notes" -> _notes)  ~
+                   ("release_url"   -> _readme) ~
+                   ("vcs_tag"       -> _vcsTag))))(handler)
+      }
+
       /** Package version methods */
-      case class Version(vers: String) extends Client.Completion {
+      case class Version(version: String) extends Client.Completion {
         object Attrs {
           private def versionAttrBase =
-            apiHost / "packages" / subject / repo / name / "versions" / vers / "attributes"
+            apiHost / "packages" / subject / repo / name / "versions" / version / "attributes"
 
           /** https://bintray.com/docs/api.html#_get_attributes */
           def apply(names: String*) =
@@ -92,7 +113,7 @@ trait Methods { self: Requests =>
         }
 
         private[this] def versionBase =
-          apiHost / "packages" / subject / repo / name / "versions" / vers
+          apiHost / "packages" / subject / repo / name / "versions" / version
 
         private[this] def contentBase = apiHost / "content" / subject / repo
 
@@ -104,14 +125,14 @@ trait Methods { self: Requests =>
          *  see also http://blog.bintray.com/2013/08/06/fight-crime-with-gpg/
          */
         def sign(passphrase: String) =
-          complete(apiHost.POST / "gpg" / subject / repo / name / "versions" / vers <<
+          complete(apiHost.POST / "gpg" / subject / repo / name / "versions" / version <<
                    compact(render(("passphrase" -> passphrase))))
 
         /** https://bintray.com/docs/api.html#_sync_version_artifacts_to_maven_central
          *  see also http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/
          */
         def sync(sonatypeUser: String, sonatypePassword: String, close: Boolean = false) =
-          complete(apiHost.POST / "maven_central_sync" / subject / repo / name / "versions" / vers <<
+          complete(apiHost.POST / "maven_central_sync" / subject / repo / name / "versions" / version <<
                  compact(render(("username" -> sonatypeUser) ~
                                 ("password" -> sonatypePassword) ~
                                 ("close"    -> Some("1").filter(Function.const(close))))))
@@ -129,22 +150,24 @@ trait Methods { self: Requests =>
 
         /** https://bintray.com/docs/api.html#_upload_content */
         def upload(
-          path: String, content: File,
-          publish: Boolean = false, explode: Boolean = false) =
-            complete(appendPath(
-              contentBase.PUT,
-              publishPath(path, publish, explode)) <:< Map(
+          path: String,
+          content: File,
+          publish: Boolean = false,
+          explode: Boolean = false) =
+          complete(appendPath(
+            contentBase.PUT,
+            publishPath(path, publish, explode)) <:< Map(
               "X-Bintray-Package" -> name,
-              "X-Bintray-Version" -> vers
+              "X-Bintray-Version" -> version
             ) <<< content)
 
         /** https://bintray.com/docs/api.html#_publish_discard_uploaded_content */
         def publish =
-          complete(contentBase.POST / name / vers / "publish")
+          complete(contentBase.POST / name / version / "publish")
 
         /** https://bintray.com/docs/api.html#_publish_discard_uploaded_content */
         def discard =
-          complete(contentBase.POST / name / vers / "publish" << compact(render("discard" -> true)))
+          complete(contentBase.POST / name / version / "publish" << compact(render("discard" -> true)))
       }
 
       /** Logs interface */
@@ -180,13 +203,11 @@ trait Methods { self: Requests =>
 
       /** https://bintray.com/docs/api.html#_create_version */
       def createVersion(
-        version: String, notes: Option[String] = None,
+        version: String,
+        notes: Option[String] = None,
         readme: Option[String] = None) =
-        complete(pkgBase.POST / "versions" <<
-                 compact(render(
-                   ("name"          -> version) ~
-                   ("release_notes" -> notes.map(JString(_)).getOrElse(JNothing)) ~
-                   ("release_url"   -> readme.map(JString(_)).getOrElse(JNothing)))))
+        CreateVersion(version)
+
 
       /** https://bintray.com/docs/api.html#_maven_upload
        *  path should be in standard mvn format
