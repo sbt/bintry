@@ -1,5 +1,6 @@
 package bintry
 
+import bintry.Util.appendPath
 import dispatch.Req
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
@@ -8,7 +9,7 @@ import java.io.File
 import scala.concurrent.ExecutionContext
 
 trait Methods { self: Requests =>
-  import bintry.Util._
+
   /** All methods relating to a given repo */
   case class Repo(subject: String, repo: String) extends Client.Completion {
 
