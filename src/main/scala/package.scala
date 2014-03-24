@@ -1,6 +1,7 @@
+import com.ning.http.client.{ AsyncCompletionHandler, AsyncHandler, ProgressAsyncHandler, Response }
+import dispatch.FunctionHandler
+
 package object bintry {
-  import com.ning.http.client.{ AsyncCompletionHandler, AsyncHandler, ProgressAsyncHandler, Response }
-  import dispatch.FunctionHandler
 
   object Noop extends FunctionHandler(identity)
 

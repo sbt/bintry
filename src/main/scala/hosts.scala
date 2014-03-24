@@ -1,6 +1,6 @@
 package bintry
 
-import dispatch._
+import dispatch.{ Req, :/ }
 
 trait Hosts {
   def apiHost: Req
