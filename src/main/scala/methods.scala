@@ -1,7 +1,6 @@
 package bintry
 
-import dispatch._
-import org.json4s._
+import dispatch.Req
 import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
@@ -132,7 +131,7 @@ trait Methods { self: Requests =>
         /** https://bintray.com/docs/api.html#_sync_version_artifacts_to_maven_central
          *  see also http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/
          */
-        def sync(sonatypeUser: String, sonatypePassword: String, close: Boolean = false) =
+        def sync(sonatypeUser: String, sonatypePassword: String, close: Boolean = true) =
           complete(apiHost.POST / "maven_central_sync" / subject / repo / name / "versions" / version <<
                  compact(render(("username" -> sonatypeUser) ~
                                 ("password" -> sonatypePassword) ~
