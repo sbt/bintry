@@ -5,6 +5,7 @@ import org.json4s.JsonDSL._
 import org.json4s.native.Printer.compact
 import org.json4s.native.JsonMethods.render
 import java.io.File
+import scala.concurrent.ExecutionContext
 
 trait Methods { self: Requests =>
   import bintry.Util._
@@ -24,7 +25,7 @@ trait Methods { self: Requests =>
       def vcs(url: String) = copy(_vcs = Some(url))
 
       /** https://bintray.com/docs/api.html#_create_package */
-      override def apply[T](handler: Client.Handler[T]) =
+      override def apply[T](handler: Client.Handler[T])(implicit ec: ExecutionContext) =
         request((apiHost / "packages" / subject / repo).POST <<
                compact(render(
                  ("name"     -> name) ~
@@ -76,7 +77,7 @@ trait Methods { self: Requests =>
         def vcsTag(tag: String) = copy(_vcsTag = Some(tag))
         def notes(n: String) = copy(_notes = Some(n))
         def readme(rm: String) = copy(_readme = Some(rm))
-        def apply[T](handler: Client.Handler[T]) =
+        def apply[T](handler: Client.Handler[T])(implicit ec: ExecutionContext) =
           request(pkgBase.POST / "versions" <<
                   compact(render(
                    ("name"          -> version) ~
@@ -117,7 +118,7 @@ trait Methods { self: Requests =>
         private[this] def contentBase = apiHost / "content" / subject / repo
 
         /** https://bintray.com/docs/api.html#_get_version */
-        override def apply[T](handler: Client.Handler[T]) =
+        override def apply[T](handler: Client.Handler[T])(implicit ec: ExecutionContext) =
           request(versionBase)(handler)
 
         /** https://bintray.com/docs/api.html#_gpg_sign_a_version
@@ -174,7 +175,7 @@ trait Methods { self: Requests =>
       /** Logs interface */
       object Logs extends Client.Completion {
         private[this] def logsBase = apiHost / "packages" / subject / repo / name / "logs"
-        def apply[T](handler: Client.Handler[T]) =
+        def apply[T](handler: Client.Handler[T])(implicit ec: ExecutionContext) =
           request(logsBase)(handler)
         def log(name: String) =
           complete(logsBase / name)
@@ -183,7 +184,7 @@ trait Methods { self: Requests =>
       private[this] def pkgBase = apiHost / "packages" / subject / repo / name
 
       /** https://bintray.com/docs/api.html#_get_package */
-      override def apply[T](handler: Client.Handler[T]) =
+      override def apply[T](handler: Client.Handler[T])(implicit ec: ExecutionContext) =
         request(pkgBase)(handler)
 
       /** https://bintray.com/docs/api.html#_delete_package */
@@ -231,7 +232,7 @@ trait Methods { self: Requests =>
 
     private[this] def linkBase = apiHost / "repository" / subject / repo / "links"
 
-    override def apply[T](handler: Client.Handler[T]) =
+    override def apply[T](handler: Client.Handler[T])(implicit ec: ExecutionContext) =
       request(base)(handler)
 
     /** https://bintray.com/docs/api.html#_get_repository */
@@ -268,7 +269,7 @@ trait Methods { self: Requests =>
     private[this] def userBase = apiHost / "users" / user
 
     /** https://bintray.com/docs/api.html#_get_user */
-    override def apply[T](handler: Client.Handler[T]) =
+    override def apply[T](handler: Client.Handler[T])(implicit ec: ExecutionContext) =
       request(userBase)(handler)
 
     /** https://bintray.com/docs/api.html#_get_followers */
@@ -298,7 +299,7 @@ trait Methods { self: Requests =>
     }
 
     /** https://bintray.com/docs/api.html#_get_webhooks */
-    override def apply[T](handler: Client.Handler[T]) =
+    override def apply[T](handler: Client.Handler[T])(implicit ec: ExecutionContext) =
       request(hookBase)(handler)
 
      /** https://bintray.com/docs/api.html#_register_a_webhook */
@@ -336,7 +337,7 @@ trait Methods { self: Requests =>
           copy(_queries = (name, AttrOneOf(attrs)) +: _queries)
 
         
-        override def apply[T](handler: Client.Handler[T]) = {
+        override def apply[T](handler: Client.Handler[T])(implicit ec: ExecutionContext) = {
           val query = compact(render(AttrsSearchJson(_queries)))
           request(endpoint.POST << query)(handler)
         }
