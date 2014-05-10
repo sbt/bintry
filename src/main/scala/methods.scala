@@ -22,7 +22,7 @@ trait Methods { self: Requests =>
       extends Client.Completion {
       def desc(d: String) = copy(_desc = Some(d))
       def labels(ls: String*) = copy(_labels = ls.toList)
-      def licences(ls: String*) = copy(_licenses = ls.toList)
+      def licenses(ls: String*) = copy(_licenses = ls.toList)
       def vcs(url: String) = copy(_vcs = Some(url))
 
       /** https://bintray.com/docs/api.html#_create_package */
@@ -134,7 +134,7 @@ trait Methods { self: Requests =>
          *  see also http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/
          *  see also https://docs.sonatype.org/display/Repository/Central+Sync+Requirements
          */
-        def sync(sonatypeUser: String, sonatypePassword: String, close: Boolean = true) =
+        def syncCentral(sonatypeUser: String, sonatypePassword: String, close: Boolean = true) =
           complete(apiHost.POST / "maven_central_sync" / subject / repo / name / "versions" / version <<
                  compact(render(("username" -> sonatypeUser) ~
                                 ("password" -> sonatypePassword) ~

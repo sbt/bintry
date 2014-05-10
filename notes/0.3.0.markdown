@@ -6,15 +6,21 @@ Enjoy Bintray's new [syncing](http://blog.bintray.com/2014/02/11/bintray-as-pain
 may need to adjust your build definition to meet the [requirements](https://docs.sonatype.org/display/Repository/Central+Sync+Requirements) for a maven central sync.
 
     import bintry._
-    Client(user, pass).repo(sub, repo).get(pkg).version(vers)(sonauser, sonapassword, close = true)()
+    Client(user, pass).repo(sub, repo)
+      .get(pkg).version(vers)
+      .syncCentral(sonauser, sonapassword)()
     
 * Added support for pgp signing for [versions](https://bintray.com/docs/api.html#_gpg_sign_a_version) and [files](https://bintray.com/docs/api.html#_gpg_sign_a_file)
 
 Feel at easy with Bintray's [hosted pgp signing feature](http://blog.bintray.com/2013/08/06/fight-crime-with-gpg/)
 
     import bintry._
-    Client(user, pass).repo(sub, repo).get(pkg).version(vers).sign(passphrase)()
+    Client(user, pass).repo(sub, repo)
+      .get(pkg).version(vers)
+      .sign(passphrase)()
   
 * Added support for download [logs](https://bintray.com/docs/api.html#_list_package_download_log_files) and pulling down a [download](https://bintray.com/docs/api.html#_download_package_download_log_file)
 
- 
+# fixes
+
+* publishes using the `moduleName` sbt setting, not `name`.

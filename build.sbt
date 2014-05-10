@@ -6,11 +6,11 @@ version := "0.3.0-SNAPSHOT"
 
 description := "your packages, delivered fresh"
 
-crossScalaVersions := Seq("2.9.3", "2.10.3")
+crossScalaVersions := Seq("2.9.3", "2.10.4", "2.11.0")
 
-scalaVersion <<= crossScalaVersions apply (_.head)
+scalaVersion := crossScalaVersions.value.head
 
-libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.0")
+libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.1")
 
 publishTo := Some(Opts.resolver.sonatypeStaging)
 
