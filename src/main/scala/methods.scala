@@ -18,7 +18,8 @@ trait Methods { self: Requests =>
   }
 
   /** All methods relating to a given repo */
-  case class Repo(subject: String, repo: String) extends Client.Completion {
+  case class Repo(subject: String, repo: String)
+    extends Client.Completion {
 
     case class PackageCreate(
       name: String,
@@ -27,6 +28,7 @@ trait Methods { self: Requests =>
       _licenses: List[String] = Nil,
       _vcs: Option[String] = None)
       extends Client.Completion {
+
       def desc(d: String) = copy(_desc = Some(d))
       def labels(ls: String*) = copy(_labels = ls.toList)
       def licenses(ls: String*) = copy(_licenses = ls.toList)
@@ -141,7 +143,7 @@ trait Methods { self: Requests =>
          *  see also http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/
          *  see also https://docs.sonatype.org/display/Repository/Central+Sync+Requirements
          */
-        def syncCentral(sonatypeUser: String, sonatypePassword: String, close: Boolean = true) =
+        def mavenCentralSync(sonatypeUser: String, sonatypePassword: String, close: Boolean = true) =
           complete(json.content(apiHost.POST) / "maven_central_sync" / subject / repo / name / "versions" / version <<
                  json.str(("username" -> sonatypeUser) ~
                           ("password" -> sonatypePassword) ~
@@ -180,7 +182,8 @@ trait Methods { self: Requests =>
           complete(json.content(contentBase.POST) / name / version / "publish" << json.str("discard" -> true))
       }
 
-      /** Logs interface */
+      /** Logs interface
+       *  see also http://blog.bintray.com/2013/11/18/its-your-content-claim-the-logs-for-it/ */
       object Logs extends Client.Completion {
         private[this] def logsBase = apiHost / "packages" / subject / repo / name / "logs"
         def apply[T](handler: Client.Handler[T]) =
@@ -255,6 +258,7 @@ trait Methods { self: Requests =>
     def unlink(subject: String, repo: String, pkg: String) =
       complete(linkBase.DELETE / subject / repo / pkg)
 
+    /** Reference to package interface */
     def get(pkg: String) =
       Package(pkg)
 
@@ -291,14 +295,11 @@ trait Methods { self: Requests =>
     sealed trait Method {
       def name: String
     }
-    object POST extends Method {
-      val name = "post"
-    }
-    object PUT extends Method {
-      val name = "put"
-    }
-    object GET extends Method {
-      val name = "get"
+    object Method {
+      abstract class Value(val name: String) extends Method
+      object POST extends Value("post")
+      object PUT extends Value("put")
+      object GET extends Value("get")
     }
 
     private[this] def hookBase = {
@@ -357,51 +358,94 @@ trait Methods { self: Requests =>
         SearchTarget(attrSearchBase / subject / repo)
     }
 
+    case class RepoSearch(
+      _name: Option[String] = None,
+      _desc: Option[String] = None,
+      _pos: Int = 0) extends Client.Completion {
+      def name(n: String) = copy(_name = Some(n))
+      def desc(d: String) = copy(_desc = Some(d))
+      def startPos(start: Int) = copy(_pos = start)
+      def apply[T](handler: Client.Handler[T]) =
+        request(searchBase / "repos" <<?
+                Map("start_pos"   -> _pos.toString) ++
+                _name.map("name" -> _) ++
+                _desc.map("desc" -> _))(handler)
+    }
+
+    case class PackageSearch(
+      _pos: Int = 0,
+      _name: Option[String] = None,
+      _desc: Option[String] = None,
+      _subject: Option[String] = None,
+      _repo: Option[String] = None) extends Client.Completion {
+      def name(pkg: String) = copy(_name = Some(pkg))
+      def desc(d: String) = copy(_desc = Some(d))
+      def subject(sub: String) = copy(_subject = Some(sub))
+      def repo(r: String) = copy(_repo = Some(r))
+      def startPos(start: Int) = copy(_pos = start)
+      override def apply[T](handler: Client.Handler[T]) =
+        request(searchBase / "packages" <<?
+                Map("start_pos" -> _pos.toString) ++
+                _name.map("name" -> _) ++
+                _desc.map("desc" -> _) ++
+                _subject.map("subject" -> _) ++
+                _repo.map("repo" -> _))(handler)
+    }
+
+    case class FileSearch(
+      _file: String,
+      _repo: Option[String] = None,
+      _pos: Int = 0) extends Client.Completion {
+      def file(f: String) = copy(_file = f)
+      def repo(r: String) = copy(_repo = Some(r))
+      def startPos(start: Int) = copy(_pos = start)
+      override def apply[T](handler: Client.Handler[T]) =
+        request(searchBase / "file" <<?
+                Map("name" -> _file,
+                    "start_pos" -> _pos.toString) ++
+                _repo.map(("repo" -> _)))(handler)
+    }
+
+    case class ShaSearch(
+      _sha: String,
+      _repo: Option[String] = None,
+      _pos: Int = 0) extends Client.Completion {
+      def sha(s: String) = copy(_sha = s)
+      def repo(r: String) = copy(_repo = Some(r))
+      def startPos(start: Int) = copy(_pos = start)
+      override def apply[T](handler: Client.Handler[T]) =
+        request(searchBase / "file" <<?
+                Map("sha" -> _sha,
+                    "start_pos" -> _pos.toString) ++
+                _repo.map(("repo" -> _)))(handler)
+    }
+
+    case class UserSearch(
+      _name: String,
+      _pos: Int = 0) extends Client.Completion {
+      def name(n: String) = copy(_name = n)
+      def startPos(start: Int) = copy(_pos = start)
+      override def apply[T](handler: Client.Handler[T]) =
+        request(searchBase / "users" <<?
+                Map("name" -> _name,
+                    "start_pos" -> _pos.toString))(handler)
+    }
+
     /** https://bintray.com/docs/api.html#_repository_search */
-    def repos(
-      name: Option[String] = None, desc: Option[String] = None,
-      pos: Int = 0) =
-      complete(searchBase / "repos" <<?
-               Map("start_pos"   -> pos.toString) ++
-                 name.map("name" -> _) ++
-                 desc.map("desc" -> _))
+    def repos = RepoSearch()
 
     /** https://bintray.com/docs/api.html#_package_search */
-    def packages(
-      name: Option[String] = None,
-      desc: Option[String] = None,
-      subject: Option[String] = None,
-      repo: Option[String] = None,
-      pos: Int = 0) =
-      complete(searchBase / "packages" <<?
-               Map("start_pos" -> pos.toString) ++
-                 name.map("name" -> _) ++
-                 desc.map("desc" -> _) ++
-                 subject.map("subject" -> _) ++
-                 repo.map("repo" -> _))
+    // todo break out into case class interface.
+    def packages = PackageSearch()
 
     /** https://bintray.com/docs/api.html#_file_search_by_name */
-    def file(
-      name: String,
-      repo: Option[String] = None,
-      pos: Int = 0) =
-      complete(searchBase / "file" <<?
-               Map("name" -> name, "start_pos" -> pos.toString) ++
-                 repo.map(("repo" -> _)))
+    def file(name: String) = FileSearch(name)
 
     /** https://bintray.com/docs/api.html#_file_search_by_checksum */
-    def sha(
-      sha: String,
-      repo: Option[String] = None,
-      pos: Int = 0) =
-      complete(searchBase / "file" <<?
-               Map("sha" -> sha, "start_pos" -> pos.toString) ++
-                 repo.map(("repo" -> _)))
+    def sha(sha: String) = ShaSearch(sha)
 
     /** https://bintray.com/docs/api.html#_user_search */
-    def users(name: String, pos: Int = 0) =
-      complete(searchBase / "users" <<?
-               Map("name" -> name, "start_pos" -> pos.toString))
+    def users(name: String) = UserSearch(name)
 
     /** https://bintray.com/docs/api.html#_attribute_search */
     def attributes = new AttributeSearch
