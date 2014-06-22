@@ -99,6 +99,7 @@ trait Methods { self: Requests =>
 
       /** Package version methods */
       case class Version(version: String) extends Client.Completion {
+        /** version  attr interface */
         object Attrs {
           private def versionAttrBase =
             apiHost / "packages" / subject / repo / name / "versions" / version / "attributes"
@@ -120,6 +121,25 @@ trait Methods { self: Requests =>
           def delete(names: String*) =
             complete(if (names.isEmpty) versionAttrBase.DELETE else versionAttrBase.DELETE <<?
                      Map("names" -> names.mkString(",")))
+        }
+
+        /** version upload interface */
+        case class Upload(
+          _artifact: (String, File),
+          _publish: Boolean = false,
+          _explode: Boolean = false) extends Client.Completion {
+          def artifact(path: String, content: File) = copy(
+            _artifact = (path, content)
+          )
+          def publish(pub: Boolean) = copy(_publish = pub)
+          def explode(expl: Boolean) = copy(_explode = expl)
+          def apply[T](handler: Client.Handler[T]) =
+            request(appendPath(
+            contentBase.PUT,
+            publishPath(_artifact._1, _publish, _explode)) <:< Map(
+              "X-Bintray-Package" -> name,
+              "X-Bintray-Version" -> version
+            ) <<< _artifact._2)(handler)
         }
 
         private[this] def versionBase =
@@ -161,17 +181,7 @@ trait Methods { self: Requests =>
         def attrs = Attrs
 
         /** https://bintray.com/docs/api.html#_upload_content */
-        def upload(
-          path: String,
-          content: File,
-          publish: Boolean = false,
-          explode: Boolean = false) =
-          complete(appendPath(
-            contentBase.PUT,
-            publishPath(path, publish, explode)) <:< Map(
-              "X-Bintray-Package" -> name,
-              "X-Bintray-Version" -> version
-            ) <<< content)
+        def upload(path: String, content: File) = Upload((path, content))
 
         /** https://bintray.com/docs/api.html#_publish_discard_uploaded_content */
         def publish =
