@@ -217,12 +217,8 @@ trait Methods { self: Requests =>
       def latest = version("_latest")
 
       /** https://bintray.com/docs/api.html#_create_version */
-      def createVersion(
-        version: String,
-        notes: Option[String] = None,
-        readme: Option[String] = None) =
+      def createVersion(version: String) =
         CreateVersion(version)
-
 
       /** https://bintray.com/docs/api.html#_maven_upload
        *  path should be in standard mvn format
