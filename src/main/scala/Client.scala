@@ -17,7 +17,7 @@ object Client {
 }
 
 abstract class Requests(
-  credentials: Credentials, http: Http = Http)
+  credentials: Credentials, http: Http)
  (implicit ec: ExecutionContext)
   extends DefaultHosts
   with Methods {
@@ -36,6 +36,9 @@ abstract class Requests(
 }
 
 case class Client(
-  user: String, token: String, http: Http = Http)
+  user: String, token: String, private val http: Http = Http)
   (implicit ec: ExecutionContext)
-  extends Requests(BasicAuth(user, token))
+  extends Requests(BasicAuth(user, token), http) {
+  /** releases http resources. once closed, this client may no longer be used */
+  def close() = http.shutdown()
+}

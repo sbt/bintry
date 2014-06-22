@@ -3,9 +3,9 @@ package bintry
 import dispatch.{ Req, :/ }
 
 trait Hosts {
-  def apiHost: Req
+  protected def apiHost: Req
 }
 
 trait DefaultHosts extends Hosts {
-  def apiHost = :/("api.bintray.com").secure
+  protected def apiHost = :/("api.bintray.com").secure
 }
