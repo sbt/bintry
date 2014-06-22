@@ -8,7 +8,7 @@ may need to adjust your build definition to meet the [requirements](https://docs
     import bintry._
     Client(user, pass).repo(sub, repo)
       .get(pkg).version(vers)
-      .syncCentral(sonauser, sonapassword)()
+      .mavenCentralSync(sonauser, sonapassword)()
     
 * Added support for pgp signing for [versions](https://bintray.com/docs/api.html#_gpg_sign_a_version) and [files](https://bintray.com/docs/api.html#_gpg_sign_a_file)
 
