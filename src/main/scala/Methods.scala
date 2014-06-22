@@ -220,15 +220,25 @@ trait Methods { self: Requests =>
       def createVersion(version: String) =
         CreateVersion(version)
 
+      case class MvnUpload(
+        _artifact: (String, File),
+        _publish: Boolean = false,
+        _exploded: Boolean = false) extends Client.Completion {
+        def artifact(path: String, content: File) =
+          copy(_artifact = (path, content))
+        def publish(pub: Boolean) = copy(_publish = pub)
+        def exploded(explode: Boolean) = copy(_exploded = explode)
+        def apply[T](handler: Client.Handler[T]) =
+          request(appendPath(
+            apiHost.PUT / "maven" / subject / repo / name,
+            publishPath(_artifact._1, _publish, _exploded)) <<< _artifact._2)(handler)
+      }
+
       /** https://bintray.com/docs/api.html#_maven_upload
        *  path should be in standard mvn format
        *  i.e. com/org/name/version/name-version.pom
        */
-      def mvnUpload(
-        path: String, content: File,
-        publish: Boolean = false, explode: Boolean = false) =
-        complete(appendPath(apiHost.PUT / "maven" / subject / repo / name,
-                            publishPath(path, publish, explode)) <<< content)
+      def mvnUpload(path: String, content: File) = MvnUpload((path, content))
 
       def logs = Logs
     }
@@ -288,15 +298,6 @@ trait Methods { self: Requests =>
   /** Webhook methods */
   case class Webhooks(subject: String, repo: Option[String] = None)
     extends Client.Completion {
-    sealed trait Method {
-      def name: String
-    }
-    object Method {
-      abstract class Value(val name: String) extends Method
-      object POST extends Value("post")
-      object PUT extends Value("put")
-      object GET extends Value("get")
-    }
 
     private[this] def hookBase = {
       val hooks = apiHost / "webhooks" / subject
@@ -308,7 +309,7 @@ trait Methods { self: Requests =>
       request(hookBase)(handler)
 
      /** https://bintray.com/docs/api.html#_register_a_webhook */
-     def create(pkg: String, url: String, method: Method) =
+     def create(pkg: String, url: String, method: Webhook.Method) =
       complete(json.content(hookBase.POST) / pkg << json.str(
         ("url"    -> url) ~
         ("method" -> method.name)))
