@@ -20,7 +20,3 @@ Feel at ease with Bintray's [hosted pgp signing feature](http://blog.bintray.com
       .sign(passphrase)()
   
 * Added support for downloading [logs](https://bintray.com/docs/api.html#_list_package_download_log_files) and pulling down a [download](https://bintray.com/docs/api.html#_download_package_download_log_file)
-
-# fixes
-
-* publishes using the `moduleName` sbt setting, not `name`.
