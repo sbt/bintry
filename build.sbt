@@ -16,9 +16,9 @@ scalacOptions in ThisBuild ++= Seq(Opts.compile.deprecation) ++
 
 libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.1")
 
-publishTo := Some(Opts.resolver.sonatypeStaging)
+seq(bintraySettings:_*)
 
-publishMavenStyle := true
+bintray.Keys.packageLabels in bintray.Keys.bintray := Seq("bintray", "dispatch", "http")
 
 publishArtifact in Test := false
 
@@ -42,4 +42,6 @@ pomExtra := (
 
 lsSettings
 
-(LsKeys.tags in LsKeys.lsync) := Seq("bintray", "dispatch", "http")
+externalResolvers in LsKeys.lsync := (resolvers in bintray.Keys.bintray).value
+
+(LsKeys.tags in LsKeys.lsync) := (bintray.Keys.packageLabels in bintray.Keys.bintray).value

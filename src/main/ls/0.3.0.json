@@ -6,7 +6,7 @@
   "site" : "https://github.com/softprops/bintry/#readme",
   "tags" : [ "bintray", "dispatch", "http" ],
   "docs" : "",
-  "resolvers" : [ "https://oss.sonatype.org/content/repositories/releases" ],
+  "resolvers" : [ "http://dl.bintray.com/content/softprops/maven" ],
   "dependencies" : [ {
     "organization" : "net.databinder.dispatch",
     "name" : "dispatch-json4s-native",
