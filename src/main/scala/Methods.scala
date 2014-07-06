@@ -23,10 +23,10 @@ trait Methods { self: Requests =>
 
     case class PackageCreate(
       name: String,
-      _desc: Option[String] = None,
-      _labels: List[String] = Nil,
+      _desc: Option[String]   = None,
+      _labels: List[String]   = Nil,
       _licenses: List[String] = Nil,
-      _vcs: Option[String] = None)
+      _vcs: Option[String]    = None)
       extends Client.Completion {
 
       def desc(d: String) = copy(_desc = Some(d))
@@ -46,7 +46,8 @@ trait Methods { self: Requests =>
     }
 
     /** Package methods */
-    case class Package(name: String) extends Client.Completion {
+    case class Package(name: String)
+      extends Client.Completion {
       object Attrs {
         private def pkgAttrBase = apiHost / "packages" / subject / repo / name / "attributes"
 
@@ -82,7 +83,8 @@ trait Methods { self: Requests =>
         _desc: Option[String]   = None,
         _vcsTag: Option[String] = None,
         _notes: Option[String]  = None,
-        _readme: Option[String] = None) extends Client.Completion {
+        _readme: Option[String] = None)
+        extends Client.Completion {
         def desc(d: String) = copy(_desc = Some(d))
         def vcsTag(tag: String) = copy(_vcsTag = Some(tag))
         def notes(n: String) = copy(_notes = Some(n))
@@ -98,7 +100,8 @@ trait Methods { self: Requests =>
       }
 
       /** Package version methods */
-      case class Version(version: String) extends Client.Completion {
+      case class Version(version: String)
+        extends Client.Completion {
         /** version  attr interface */
         object Attrs {
           private def versionAttrBase =
@@ -127,7 +130,8 @@ trait Methods { self: Requests =>
         case class Upload(
           _artifact: (String, File),
           _publish: Boolean = false,
-          _explode: Boolean = false) extends Client.Completion {
+          _explode: Boolean = false)
+          extends Client.Completion {
           def artifact(path: String, content: File) = copy(
             _artifact = (path, content)
           )
@@ -233,7 +237,8 @@ trait Methods { self: Requests =>
       case class MvnUpload(
         _artifact: (String, File),
         _publish: Boolean = false,
-        _exploded: Boolean = false) extends Client.Completion {
+        _exploded: Boolean = false)
+        extends Client.Completion {
         def artifact(path: String, content: File) =
           copy(_artifact = (path, content))
         def publish(pub: Boolean) = copy(_publish = pub)
@@ -255,16 +260,14 @@ trait Methods { self: Requests =>
 
     private[this] def base = apiHost / "repos" / subject / repo
 
-    private[this] def packagesBase = apiHost / "packages" / subject / repo
-
     private[this] def linkBase = apiHost / "repository" / subject / repo / "links"
 
     override def apply[T](handler: Client.Handler[T]) =
       request(base)(handler)
 
     /** https://bintray.com/docs/api.html#_get_repository */
-    def packages(pos: Int = 0) =
-      complete(base / "packages" <<? Map("start_pos" -> pos.toString))
+    def packages(pos: Int = 0, prefix: Option[String] = None) =
+      complete(base / "packages" <<? Map("start_pos" -> pos.toString) ++ prefix.map(("start_name" -> _)))
 
     /** https://bintray.com/docs/api.html#_link_package */
     def link(subject: String, repo: String, pkg: String) = 
@@ -293,7 +296,8 @@ trait Methods { self: Requests =>
   }
 
   /** User methods */
-  case class User(user: String) extends Client.Completion {
+  case class User(user: String)
+   extends Client.Completion {
     private[this] def userBase = apiHost / "users" / user
 
     /** https://bintray.com/docs/api.html#_get_user */
