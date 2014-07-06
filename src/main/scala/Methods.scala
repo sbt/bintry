@@ -167,11 +167,11 @@ trait Methods { self: Requests =>
          *  see also http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/
          *  see also https://docs.sonatype.org/display/Repository/Central+Sync+Requirements
          */
-        def mavenCentralSync(sonatypeUser: String, sonatypePassword: String, close: Boolean = true) =
+        /*def mavenCentralSync(sonatypeUser: String, sonatypePassword: String, close: Boolean = true) =
           complete(json.content(apiHost.POST) / "maven_central_sync" / subject / repo / name / "versions" / version <<
                  json.str(("username" -> sonatypeUser) ~
                           ("password" -> sonatypePassword) ~
-                          ("close"    -> Some("1").filter(Function.const(close)))))
+                          ("close"    -> Some("1").filter(Function.const(close)))))*/
 
         /** https://bintray.com/docs/api.html#_delete_version */
         def delete =
