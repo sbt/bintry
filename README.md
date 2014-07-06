@@ -11,7 +11,7 @@ A scala interface for the [bintray](https://bintray.com) [api](https://bintray.c
 add the following to your sbt build definition
 
 ```scala
-libraryDependencies += "me.lessis" %% "bintry" % "0.2.0"
+libraryDependencies += "me.lessis" %% "bintry" % "0.3.0"
 ```
 
 ## civilized method
@@ -60,4 +60,4 @@ Bintray expects these to be of type `string`, `date`, `number`, `boolean` or `ve
 `StringAttr(stringVal)`, `DateAttr(java.util.Date)`, `IntAttr(intVal)`, `BooleanAttr(boolVal)` and  `VersionAttr(stringVal)` respectively.
 
 
-Doug Tangren (softprops) 2013
+Doug Tangren (softprops) 2013-2014
