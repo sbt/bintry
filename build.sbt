@@ -2,7 +2,7 @@ organization := "me.lessis"
 
 name := "bintry"
 
-version := "0.3.0-SNAPSHOT"
+version := "0.3.0"
 
 description := "your packages, delivered fresh"
 
@@ -39,7 +39,6 @@ pomExtra := (
       <url>https://github.com/softprops</url>
     </developer>
   </developers>)
-
 
 lsSettings
 
