@@ -14,7 +14,7 @@ scalacOptions in ThisBuild ++= Seq(Opts.compile.deprecation) ++
   Seq("-Ywarn-unused-import", "-Ywarn-unused", "-Xlint", "-feature").filter(
     Function.const(scalaVersion.value.startsWith("2.11")))
 
-libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.1")
+libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2")
 
 seq(bintraySettings:_*)
 
