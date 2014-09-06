@@ -19,7 +19,7 @@ trait Methods { self: Requests =>
 
   /** All methods relating to a given repo */
   case class Repo(subject: String, repo: String)
-    extends Client.Completion[Response] {
+    extends Client.Completion[bintry.Repo] {
 
     case class PackageCreate(
       name: String,
@@ -488,7 +488,7 @@ trait Methods { self: Requests =>
 
   /** https://bintray.com/docs/api.html#_get_repositories */
   def repos(subject: String) =
-    complete[Response](apiHost / "repos" / subject)
+    complete[List[RepoSummary]](apiHost / "repos" / subject)
 
   def repo(subject: String, repo: String) =
     Repo(subject, repo)

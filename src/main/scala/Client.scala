@@ -1,7 +1,7 @@
 package bintry
 
 import com.ning.http.client.{ AsyncHandler, Response }
-import dispatch.{ FunctionHandler, Http, Req }
+import dispatch.{ OkFunctionHandler, Http, Req }
 import scala.concurrent.{ ExecutionContext, Future }
 
 object Client {
@@ -10,7 +10,7 @@ object Client {
     def apply(): Future[T] =
       apply(implicitly[Rep[T]].map)
     def apply[T](f: Response => T): Future[T] =
-      apply(new FunctionHandler(f))
+      apply(new OkFunctionHandler(f))
     def apply[T]
       (handler: Client.Handler[T]): Future[T]
   }
@@ -36,7 +36,8 @@ abstract class Requests(
 }
 
 case class Client(
-  user: String, token: String, private val http: Http = new Http)
+  user: String, token: String,
+  private val http: Http = new Http)
  (implicit ec: ExecutionContext)
   extends Requests(BasicAuth(user, token), http) {
   /** releases http resources. once closed, this client may no longer be used */

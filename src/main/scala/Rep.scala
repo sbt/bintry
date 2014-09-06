@@ -5,6 +5,17 @@ import dispatch.as
 import org.json4s._
 import org.json4s.JsonDSL._
 
+case class RepoSummary(name: String, owner: String)
+
+case class Repo(
+  name: String,
+  owner: String,
+  desc: String,
+  labels: List[String],
+  created: String,
+  packages: Int
+)
+
 case class PackageSummary(name: String, linked: Boolean)
 
 case class Package(
@@ -19,7 +30,7 @@ case class Package(
   updated: String,
   web: Option[String],
   issueTracker: Option[String],
-  gitRepo: Option[String],
+  githubRepo: Option[String],
   vcs: Option[String],
   githubReleaseNotes: String,
   publicDownloadNumbers: Boolean,
@@ -46,6 +57,7 @@ object Rep {
       JString(s) <- xs
     } yield s
   }
+
   implicit val Identity: Rep[Response] =
     new Rep[Response] {
       def map = identity(_)
@@ -54,6 +66,32 @@ object Rep {
   implicit val Nada: Rep[Unit] =
     new Rep[Unit] {
       def map = _ => ()
+    }
+
+  implicit val RepoSummaries: Rep[List[RepoSummary]] =
+    new Rep[List[RepoSummary]] {
+      def map = as.json4s.Json andThen(for {
+        JArray(repos) <- _
+        JObject(repo) <- repos
+        ("name", JString(name)) <- repo
+        ("owner", JString(owner)) <- repo
+      } yield RepoSummary(name, owner))
+    }
+
+  implicit val RepoDetails: Rep[Repo] =
+    new Rep[Repo] with Common {
+      def map = as.json4s.Json andThen { js =>
+        (for {
+          JObject(repo)                     <- js
+          ("name", JString(name))           <- repo
+          ("owner", JString(owner))         <- repo
+          ("desc", JString(desc))           <- repo
+          ("labels", labels)                <- repo
+          ("created", JString(created))     <- repo
+          ("package_count", JInt(packages)) <- repo
+        } yield Repo(
+          name, owner, desc, strs(labels), created, packages.toInt)).head
+      }
     }
 
   implicit val PackageDetails: Rep[Package] =
@@ -70,7 +108,7 @@ object Rep {
         ("created", JString(created))     <- pkg
         ("website_url", web)              <- pkg
         ("issue_tracker_url", issues)     <- pkg
-        ("github_repo", git)              <- pkg
+        ("github_repo", github)           <- pkg
         ("github_release_notes", JString(releaseNotes)) <- pkg
         ("public_download_numbers", JBool(downloadNums)) <- pkg
         ("linked_to_repos", links)        <- pkg
@@ -79,13 +117,13 @@ object Rep {
         ("updated", JString(updated))     <- pkg
         ("rating_count", JInt(rating))    <- pkg
         ("system_ids", sysIds)            <- pkg
-        ("vcs", vcs)                      <- pkg
+        ("vcs_url", vcs)                  <- pkg
       } yield Package(
         name, repo, owner, desc,
         strs(labels), strs(attrs),
         followers.toInt,
         created, updated,
-        str(web), str(issues), str(git), str(vcs),
+        str(web), str(issues), str(github), str(vcs),
         releaseNotes, downloadNums,
         strs(links), strs(versions), str(latestVersion),
         rating.toInt, strs(sysIds))).head
