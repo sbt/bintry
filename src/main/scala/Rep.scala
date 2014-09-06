@@ -41,6 +41,20 @@ case class Package(
   systemIds: List[String]  
 )
 
+case class Version(
+  name: String,
+  desc: String,
+  pkg: String,
+  repo: String,
+  owner: String,
+  labels: List[String],
+  attrNames: List[String],
+  created: String,
+  updated: String,
+  released: String,
+  ordinal: Int
+)
+
 /** Type class for representing a response as a given type */
 trait Rep[T] {
   def map: Response => T
@@ -95,7 +109,7 @@ object Rep {
     }
 
   implicit val PackageDetails: Rep[Package] =
-    new Rep[Package] with Common {    
+    new Rep[Package] with Common {
       def map = as.json4s.Json andThen { js => (for {
         JObject(pkg)                      <- js
         ("name", JString(name))           <- pkg
@@ -139,4 +153,13 @@ object Rep {
         ("linked", JBool(linked)) <- pkg
       } yield PackageSummary(name, linked))
     }
+
+  /*implicit val VersionDetails: Rep[Version] =
+    new Repo[Version] {
+      def map = as.json4s.Json andThen { js =>
+        (for {
+
+        } yield ...).head
+      }
+    }*/
 }
