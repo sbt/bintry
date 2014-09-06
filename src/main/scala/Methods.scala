@@ -1,25 +1,25 @@
 package bintry
 
+import com.ning.http.client.Response
 import bintry.Util.appendPath
 import dispatch.Req
 import org.json4s.JValue
 import org.json4s.JsonDSL._
-import org.json4s.native.Printer.compact
-import org.json4s.native.JsonMethods.render
+import org.json4s.native.JsonMethods.{ compact, render }
 import java.io.File
 
 trait Methods { self: Requests =>
 
-  private object json {
-    private[this] val Typ = "application/json"
+  object json {
+    private[this] val Type = "application/json"
     private[this] val Encoding = "UTF-8"
-    def content(r: Req) = r.setContentType(Typ, Encoding)
+    def content(r: Req) = r.setContentType(Type, Encoding)
     def str(jv: JValue) = compact(render(jv))
   }
 
   /** All methods relating to a given repo */
   case class Repo(subject: String, repo: String)
-    extends Client.Completion {
+    extends Client.Completion[Response] {
 
     case class PackageCreate(
       name: String,
@@ -27,7 +27,7 @@ trait Methods { self: Requests =>
       _labels: List[String]   = Nil,
       _licenses: List[String] = Nil,
       _vcs: Option[String]    = None)
-      extends Client.Completion {
+      extends Client.Completion[Response] {
 
       def desc(d: String) = copy(_desc = Some(d))
       def labels(ls: String*) = copy(_labels = ls.toList)
@@ -47,27 +47,35 @@ trait Methods { self: Requests =>
 
     /** Package methods */
     case class Package(name: String)
-      extends Client.Completion {
+      extends Client.Completion[bintry.Package] {
       object Attrs {
-        private def pkgAttrBase = apiHost / "packages" / subject / repo / name / "attributes"
+        private def pkgAttrBase =
+          (apiHost / "packages" /
+           subject / repo / name / "attributes")
 
         /** https://bintray.com/docs/api.html#_get_attributes */
         def apply(names: String*) =
-          complete(if (names.isEmpty) pkgAttrBase else pkgAttrBase <<?
-                   Map("names" -> names.mkString(",")))
+          complete[Response](
+            (if (names.isEmpty) pkgAttrBase else pkgAttrBase)
+              <<? Map("names" -> names.mkString(",")))
 
         /** https://bintray.com/docs/api.html#_set_attributes */
         def set[A <: Attr[_]](attrs: (String, Iterable[A])*) =
-          complete(json.content(pkgAttrBase.POST) << json.str(AttrsToJson(attrs)))
+          complete[Response](
+            json.content(pkgAttrBase.POST)
+              << json.str(AttrsToJson(attrs)))
 
         /** https://bintray.com/docs/api.html#_update_attributes */
         def update[A <: Attr[_]](attrs: (String, Iterable[A])*) =
-          complete(json.content(pkgAttrBase.PATCH) << json.str(AttrsToJson(attrs)))
+          complete[Response](
+            json.content(pkgAttrBase.PATCH)
+              << json.str(AttrsToJson(attrs)))
 
         /** https://bintray.com/docs/api.html#_delete_attributes */
         def delete(names: String*) =
-          complete(if (names.isEmpty) pkgAttrBase.DELETE else pkgAttrBase.DELETE <<?
-                   Map("names" -> names.mkString(",")))
+          complete[Response](
+            (if (names.isEmpty) pkgAttrBase.DELETE else pkgAttrBase.DELETE)
+              <<? Map("names" -> names.mkString(",")))
       }
 
       private[this] def publishPath(
@@ -84,7 +92,7 @@ trait Methods { self: Requests =>
         _vcsTag: Option[String] = None,
         _notes: Option[String]  = None,
         _readme: Option[String] = None)
-        extends Client.Completion {
+        extends Client.Completion[Response] {
         def desc(d: String) = copy(_desc = Some(d))
         def vcsTag(tag: String) = copy(_vcsTag = Some(tag))
         def notes(n: String) = copy(_notes = Some(n))
@@ -101,29 +109,34 @@ trait Methods { self: Requests =>
 
       /** Package version methods */
       case class Version(version: String)
-        extends Client.Completion {
+        extends Client.Completion[Response] {
         /** version  attr interface */
         object Attrs {
           private def versionAttrBase =
-            apiHost / "packages" / subject / repo / name / "versions" / version / "attributes"
+            (apiHost / "packages" /
+             subject / repo / name / "versions" / version / "attributes")
 
           /** https://bintray.com/docs/api.html#_get_attributes */
           def apply(names: String*) =
-            complete(if (names.isEmpty) versionAttrBase else versionAttrBase <<?
-                     Map("names" -> names.mkString(",")))
+            complete[Response](
+              (if (names.isEmpty) versionAttrBase else versionAttrBase)
+                <<? Map("names" -> names.mkString(",")))
 
           /** https://bintray.com/docs/api.html#_set_attributes */
           def set[A <: Attr[_]](attrs: (String, Iterable[A])*) =
-            complete(json.content(versionAttrBase.POST) << json.str(AttrsToJson(attrs)))
+            complete[Response](
+              json.content(versionAttrBase.POST) << json.str(AttrsToJson(attrs)))
 
           /** https://bintray.com/docs/api.html#_update_attributes */
           def update[A <: Attr[_]](attrs: (String, Iterable[A])*) =
-            complete(json.content(versionAttrBase.PATCH) << json.str(AttrsToJson(attrs)))
+            complete[Response](
+              json.content(versionAttrBase.PATCH) << json.str(AttrsToJson(attrs)))
 
           /** https://bintray.com/docs/api.html#_delete_attributes */
           def delete(names: String*) =
-            complete(if (names.isEmpty) versionAttrBase.DELETE else versionAttrBase.DELETE <<?
-                     Map("names" -> names.mkString(",")))
+            complete[Response](
+              (if (names.isEmpty) versionAttrBase.DELETE else versionAttrBase.DELETE)
+                <<? Map("names" -> names.mkString(",")))
         }
 
         /** version upload interface */
@@ -131,7 +144,7 @@ trait Methods { self: Requests =>
           _artifact: (String, File),
           _publish: Boolean = false,
           _explode: Boolean = false)
-          extends Client.Completion {
+          extends Client.Completion[Response] {
           def artifact(path: String, content: File) = copy(
             _artifact = (path, content)
           )
@@ -147,7 +160,8 @@ trait Methods { self: Requests =>
         }
 
         private[this] def versionBase =
-          apiHost / "packages" / subject / repo / name / "versions" / version
+          (apiHost / "packages" /
+           subject / repo / name / "versions" / version)
 
         private[this] def contentBase = apiHost / "content" / subject / repo
 
@@ -160,26 +174,28 @@ trait Methods { self: Requests =>
          *  see also https://bintray.com/docs/uploads/uploads_gpgsigning.html
          */
         def sign(passphrase: String) =
-          complete(json.content(apiHost.POST) / "gpg" / subject / repo / name / "versions" / version <<
-                   json.str(("passphrase" -> passphrase)))
+          complete[Response](
+            json.content(apiHost.POST) / "gpg" / subject / repo / name / "versions" / version
+              << json.str(("passphrase" -> passphrase)))
 
         /** https://bintray.com/docs/api.html#_sync_version_artifacts_to_maven_central
          *  see also http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/
          *  see also https://docs.sonatype.org/display/Repository/Central+Sync+Requirements
          */
         def mavenCentralSync(sonatypeUser: String, sonatypePassword: String, close: Boolean = true) =
-          complete(json.content(apiHost.POST) / "maven_central_sync" / subject / repo / name / "versions" / version <<
-                 json.str(("username" -> sonatypeUser) ~
+          complete[Response](
+            json.content(apiHost.POST) / "maven_central_sync" / subject / repo / name / "versions" / version
+              << json.str(("username" -> sonatypeUser) ~
                           ("password" -> sonatypePassword) ~
                           ("close"    -> Some("1").filter(Function.const(close)))))
 
         /** https://bintray.com/docs/api.html#_delete_version */
         def delete =
-          complete(versionBase.DELETE)
+          complete[Response](versionBase.DELETE)
 
         /** https://bintray.com/docs/api.html#_update_version */
         def update(desc: String) =
-          complete(json.content(versionBase.PATCH) <<
+          complete[Response](json.content(versionBase.PATCH) <<
                    json.str(("desc" -> desc)))
         
         def attrs = Attrs
@@ -189,24 +205,28 @@ trait Methods { self: Requests =>
 
         /** https://bintray.com/docs/api.html#_publish_discard_uploaded_content */
         def publish =
-          complete(contentBase.POST / name / version / "publish")
+          complete[Response](contentBase.POST / name / version / "publish")
 
         /** https://bintray.com/docs/api.html#_publish_discard_uploaded_content */
         def discard =
-          complete(json.content(contentBase.POST) / name / version / "publish" << json.str("discard" -> true))
+          complete[Response](
+            json.content(contentBase.POST) / name / version / "publish"
+              << json.str("discard" -> true))
       }
 
       /** Logs interface
        *  see also http://blog.bintray.com/2013/11/18/its-your-content-claim-the-logs-for-it/ */
-      object Logs extends Client.Completion {
-        private[this] def logsBase = apiHost / "packages" / subject / repo / name / "logs"
+      object Logs extends Client.Completion[Response] {
+        private[this] def logsBase =
+          apiHost / "packages" / subject / repo / name / "logs"
         def apply[T](handler: Client.Handler[T]) =
           request(logsBase)(handler)
         def log(name: String) =
-          complete(logsBase / name)
+          complete[Response](logsBase / name)
       }
 
-      private[this] def pkgBase = apiHost / "packages" / subject / repo / name
+      private[this] def pkgBase =
+        apiHost / "packages" / subject / repo / name
 
       /** https://bintray.com/docs/api.html#_get_package */
       override def apply[T](handler: Client.Handler[T]) =
@@ -214,11 +234,11 @@ trait Methods { self: Requests =>
 
       /** https://bintray.com/docs/api.html#_delete_package */
       def delete =
-        complete(pkgBase.DELETE)
+        complete[Response](pkgBase.DELETE)
 
       /** https://bintray.com/docs/api.html#_update_package */
       def update(desc: String, labels: String*) =
-        complete(json.content(pkgBase.PATCH) / name <<
+        complete[Response](json.content(pkgBase.PATCH) / name <<
                  json.str(
                    ("desc"   -> desc) ~
                    ("labels" -> labels.toList)))
@@ -238,7 +258,7 @@ trait Methods { self: Requests =>
         _artifact: (String, File),
         _publish: Boolean = false,
         _exploded: Boolean = false)
-        extends Client.Completion {
+        extends Client.Completion[Response] {
         def artifact(path: String, content: File) =
           copy(_artifact = (path, content))
         def publish(pub: Boolean) = copy(_publish = pub)
@@ -258,24 +278,27 @@ trait Methods { self: Requests =>
       def logs = Logs
     }
 
-    private[this] def base = apiHost / "repos" / subject / repo
+    private[this] def base =
+      apiHost / "repos" / subject / repo
 
-    private[this] def linkBase = apiHost / "repository" / subject / repo / "links"
+    private[this] def linkBase =
+      apiHost / "repository" / subject / repo / "links"
 
     override def apply[T](handler: Client.Handler[T]) =
       request(base)(handler)
 
     /** https://bintray.com/docs/api.html#_get_repository */
     def packages(pos: Int = 0, prefix: Option[String] = None) =
-      complete(base / "packages" <<? Map("start_pos" -> pos.toString) ++ prefix.map(("start_name" -> _)))
+      complete[List[PackageSummary]](
+        base / "packages" <<? Map("start_pos" -> pos.toString) ++ prefix.map(("start_name" -> _)))
 
     /** https://bintray.com/docs/api.html#_link_package */
     def link(subject: String, repo: String, pkg: String) = 
-      complete(linkBase.PUT / subject / repo / pkg)
+      complete[Response](linkBase.PUT / subject / repo / pkg)
 
     /** https://bintray.com/docs/api.html#_unlink_package */
     def unlink(subject: String, repo: String, pkg: String) =
-      complete(linkBase.DELETE / subject / repo / pkg)
+      complete[Response](linkBase.DELETE / subject / repo / pkg)
 
     /** Reference to package interface */
     def get(pkg: String) =
@@ -291,13 +314,14 @@ trait Methods { self: Requests =>
      *  see also https://bintray.com/docs/uploads/uploads_gpgsigning.html
      */
     def sign(passphrase: String, path: String) =
-      complete(appendPath(json.content(apiHost.POST) / "gpg" / subject / repo, path) <<
-               json.str(("passphrase" -> passphrase)))
+      complete[Response](
+        appendPath(json.content(apiHost.POST) / "gpg" / subject / repo, path)
+          << json.str(("passphrase" -> passphrase)))
   }
 
   /** User methods */
   case class User(user: String)
-   extends Client.Completion {
+   extends Client.Completion[Response] {
     private[this] def userBase = apiHost / "users" / user
 
     /** https://bintray.com/docs/api.html#_get_user */
@@ -306,12 +330,12 @@ trait Methods { self: Requests =>
 
     /** https://bintray.com/docs/api.html#_get_followers */
     def followers(pos: Int = 0) =
-      complete(userBase / "followers" <<? Map("start_pos" -> pos.toString))
+      complete[Response](userBase / "followers" <<? Map("start_pos" -> pos.toString))
   }
 
   /** Webhook methods */
   case class Webhooks(subject: String, repo: Option[String] = None)
-    extends Client.Completion {
+    extends Client.Completion[Response] {
 
     private[this] def hookBase = {
       val hooks = apiHost / "webhooks" / subject
@@ -324,17 +348,18 @@ trait Methods { self: Requests =>
 
      /** https://bintray.com/docs/api.html#_register_a_webhook */
      def create(pkg: String, url: String, method: Webhook.Method) =
-      complete(json.content(hookBase.POST) / pkg << json.str(
-        ("url"    -> url) ~
-        ("method" -> method.name)))
+      complete[Response](
+        json.content(hookBase.POST) / pkg
+          << json.str(("url"    -> url) ~
+                      ("method" -> method.name)))
 
     /** https://bintray.com/docs/api.html#_delete_a_webhook */
     def delete(pkg: String) =
-      complete(hookBase.DELETE / pkg)
+      complete[Response](hookBase.DELETE / pkg)
 
     /** https://bintray.com/docs/api.html#_test_a_webhook */
     def test(pkg: String, version: String) =
-      complete(hookBase.POST / pkg / version)
+      complete[Response](hookBase.POST / pkg / version)
   }
 
   /** Search methods */
@@ -348,14 +373,13 @@ trait Methods { self: Requests =>
         endpoint: Req,
         _queries: Seq[(String, AttrQuery[_])] =
           Seq.empty[(String, AttrQuery[_])])
-        extends Client.Completion {
+        extends Client.Completion[Response] {
 
         def is[A <: Attr[_]](name: String, attr: A) =
           copy(_queries = (name, AttrIs(attr)) +: _queries)
 
         def oneOf[A <: Attr[_]](name: String, attrs: A*) =
           copy(_queries = (name, AttrOneOf(attrs)) +: _queries)
-
         
         override def apply[T](handler: Client.Handler[T]) =
           request(json.content(endpoint.POST) <<
@@ -372,7 +396,7 @@ trait Methods { self: Requests =>
     case class RepoSearch(
       _name: Option[String] = None,
       _desc: Option[String] = None,
-      _pos: Int = 0) extends Client.Completion {
+      _pos: Int = 0) extends Client.Completion[Response] {
       def name(n: String) = copy(_name = Some(n))
       def desc(d: String) = copy(_desc = Some(d))
       def startPos(start: Int) = copy(_pos = start)
@@ -388,7 +412,7 @@ trait Methods { self: Requests =>
       _name: Option[String] = None,
       _desc: Option[String] = None,
       _subject: Option[String] = None,
-      _repo: Option[String] = None) extends Client.Completion {
+      _repo: Option[String] = None) extends Client.Completion[Response] {
       def name(pkg: String) = copy(_name = Some(pkg))
       def desc(d: String) = copy(_desc = Some(d))
       def subject(sub: String) = copy(_subject = Some(sub))
@@ -406,7 +430,7 @@ trait Methods { self: Requests =>
     case class FileSearch(
       _file: String,
       _repo: Option[String] = None,
-      _pos: Int = 0) extends Client.Completion {
+      _pos: Int = 0) extends Client.Completion[Response] {
       def file(f: String) = copy(_file = f)
       def repo(r: String) = copy(_repo = Some(r))
       def startPos(start: Int) = copy(_pos = start)
@@ -420,7 +444,7 @@ trait Methods { self: Requests =>
     case class ShaSearch(
       _sha: String,
       _repo: Option[String] = None,
-      _pos: Int = 0) extends Client.Completion {
+      _pos: Int = 0) extends Client.Completion[Response] {
       def sha(s: String) = copy(_sha = s)
       def repo(r: String) = copy(_repo = Some(r))
       def startPos(start: Int) = copy(_pos = start)
@@ -433,7 +457,7 @@ trait Methods { self: Requests =>
 
     case class UserSearch(
       _name: String,
-      _pos: Int = 0) extends Client.Completion {
+      _pos: Int = 0) extends Client.Completion[Response] {
       def name(n: String) = copy(_name = n)
       def startPos(start: Int) = copy(_pos = start)
       override def apply[T](handler: Client.Handler[T]) =
@@ -464,7 +488,7 @@ trait Methods { self: Requests =>
 
   /** https://bintray.com/docs/api.html#_get_repositories */
   def repos(subject: String) =
-    complete(apiHost / "repos" / subject)
+    complete[Response](apiHost / "repos" / subject)
 
   def repo(subject: String, repo: String) =
     Repo(subject, repo)

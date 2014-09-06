@@ -6,9 +6,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 object Client {
   type Handler[T] = AsyncHandler[T]
-  trait Completion {
-    def apply(): Future[Response] =
-      apply(new FunctionHandler(identity))
+  abstract class Completion[T: Rep] {
+    def apply(): Future[T] =
+      apply(implicitly[Rep[T]].map)
     def apply[T](f: Response => T): Future[T] =
       apply(new FunctionHandler(f))
     def apply[T]
@@ -25,19 +25,19 @@ abstract class Requests(
   def request[T]
     (req: Req)
     (handler: Client.Handler[T]): Future[T] =
-    http(credentials.sign(req) > handler)
+     http(credentials.sign(req) > handler)
 
-  def complete(req: Req): Client.Completion =
-    new Client.Completion {
+  def complete[A: Rep](req: Req): Client.Completion[A] =
+    new Client.Completion[A] {
       override def apply[T]
         (handler: Client.Handler[T]) =
-        request(req)(handler)
+         request(req)(handler)
     }
 }
 
 case class Client(
-  user: String, token: String, private val http: Http = Http)
-  (implicit ec: ExecutionContext)
+  user: String, token: String, private val http: Http = new Http)
+ (implicit ec: ExecutionContext)
   extends Requests(BasicAuth(user, token), http) {
   /** releases http resources. once closed, this client may no longer be used */
   def close(): Unit = http.shutdown()
