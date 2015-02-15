@@ -1,18 +1,32 @@
 package bintry
 
 import com.ning.http.client.{ AsyncHandler, Response }
-import dispatch.{ OkFunctionHandler, Http, Req }
+import dispatch.{ FunctionHandler, Http, Req }
 import scala.concurrent.{ ExecutionContext, Future }
 
 object Client {
   type Handler[T] = AsyncHandler[T]
+
+  case class Error(code: Int, message: Message)
+    extends RuntimeException(message.message)
+
   abstract class Completion[T: Rep] {
-    def apply(): Future[T] =
-      apply(implicitly[Rep[T]].map)
-    def apply[T](f: Response => T): Future[T] =
-      apply(new OkFunctionHandler(f))
+
     def apply[T]
       (handler: Client.Handler[T]): Future[T]
+
+    def apply(): Future[T] =
+      apply(implicitly[Rep[T]].map(_))
+
+    def apply[T](f: Response => T): Future[T] =
+      apply(new FunctionHandler(f) {
+        override def onCompleted(response: Response) =
+          if (response.getStatusCode / 100 == 2) f(response)
+          else throw Error(
+            response.getStatusCode,
+            if (response.hasResponseBody) Message(response.getResponseBody)
+            else Message.empty)
+      })
   }
 }
 
@@ -39,7 +53,7 @@ case class Client(
   user: String, token: String,
   private val http: Http = new Http)
  (implicit ec: ExecutionContext)
-  extends Requests(BasicAuth(user, token), http) {
+  extends Requests(Credentials.BasicAuth(user, token), http) {
   /** releases http resources. once closed, this client may no longer be used */
   def close(): Unit = http.shutdown()
 }

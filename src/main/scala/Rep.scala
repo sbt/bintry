@@ -5,6 +5,12 @@ import dispatch.as
 import org.json4s._
 import org.json4s.JsonDSL._
 
+object Message {
+  val empty = Message("")
+}
+
+case class Message(message: String)
+
 case class RepoSummary(name: String, owner: String)
 
 case class Repo(
@@ -22,7 +28,7 @@ case class Package(
   name: String,
   repo: String,
   owner: String,
-  desc: String,
+  desc: Option[String],
   labels: List[String],
   attrNames: List[String],
   followers: Int,
@@ -43,7 +49,7 @@ case class Package(
 
 case class Version(
   name: String,
-  desc: String,
+  desc: Option[String],
   pkg: String,
   repo: String,
   owner: String,
@@ -52,51 +58,85 @@ case class Version(
   created: String,
   updated: String,
   released: String,
-  ordinal: Int
+  ordinal: Int,
+  vcsTag: Option[String]
 )
+
+case class User(
+  name: String,
+  fullName: String,
+  gravatar: String,
+  repos: List[String],
+  organizations: List[String],
+  followerCount: Int,
+  registered: String,
+  bytesUsed: Long
+)
+
+case class Name(name: String)
 
 /** Type class for representing a response as a given type */
 trait Rep[T] {
-  def map: Response => T
+  def map(r: Response): T
 }
 
 object Rep {
-  private trait Common {
-    def str(jv: JValue) = (for {
+  private def str(jv: JValue): Option[String] =
+    (for {
       JString(s) <- jv
     } yield s).headOption
 
-    def strs(jv: JValue) = for {
+  private def strs(jv: JValue): List[String] =
+    for {
       JArray(xs) <- jv
       JString(s) <- xs
     } yield s
-  }
 
   implicit val Identity: Rep[Response] =
     new Rep[Response] {
-      def map = identity(_)
+      def map(r: Response) = r
     }
 
-  implicit val Nada: Rep[Unit] =
+  implicit val nada: Rep[Unit] =
     new Rep[Unit] {
-      def map = _ => ()
+      def map(r: Response) = ()
     }
 
-  implicit val RepoSummaries: Rep[List[RepoSummary]] =
-    new Rep[List[RepoSummary]] {
-      def map = as.json4s.Json andThen(for {
-        JArray(repos) <- _
-        JObject(repo) <- repos
-        ("name", JString(name)) <- repo
+  trait JsonRep[T] extends Rep[T] {
+    def map(r: Response): T =
+      map(as.json4s.Json(r))
+    def map(js: JValue): T
+  }
+
+  implicit val messages: Rep[Message] =
+    new JsonRep[Message] {
+      def map(json: JValue) = (for {
+        JObject(msg)                  <-  json
+        ("message", JString(message)) <-  msg
+      } yield Message(message)).head
+    }
+
+  implicit val attrs: Rep[Attr.AttrMap] =
+    new JsonRep[Attr.AttrMap] {
+      def map(json: JValue) =
+        AttrsFromJson(json)
+    }
+
+  implicit val repoSummaries: Rep[List[RepoSummary]] =
+    new JsonRep[List[RepoSummary]] {
+      def map(json: JValue) = for {
+        JArray(repos)             <- json
+        JObject(repo)             <- repos
+        ("name", JString(name))   <- repo
         ("owner", JString(owner)) <- repo
-      } yield RepoSummary(name, owner))
+      } yield RepoSummary(name, owner)
     }
 
-  implicit val RepoDetails: Rep[Repo] =
-    new Rep[Repo] with Common {
-      def map = as.json4s.Json andThen { js =>
+  implicit val repoDetails: Rep[Repo] =
+    new JsonRep[Repo] {
+      def map(json: JValue) =
         (for {
-          JObject(repo)                     <- js
+          JObject(repo)                     <- json
           ("name", JString(name))           <- repo
           ("owner", JString(owner))         <- repo
           ("desc", JString(desc))           <- repo
@@ -104,62 +144,144 @@ object Rep {
           ("created", JString(created))     <- repo
           ("package_count", JInt(packages)) <- repo
         } yield Repo(
-          name, owner, desc, strs(labels), created, packages.toInt)).head
-      }
+          name,
+          owner,
+          desc,
+          strs(labels),
+          created,
+          packages.toInt)
+       ).head
     }
 
-  implicit val PackageDetails: Rep[Package] =
-    new Rep[Package] with Common {
-      def map = as.json4s.Json andThen { js => (for {
-        JObject(pkg)                      <- js
-        ("name", JString(name))           <- pkg
-        ("repo", JString(repo))           <- pkg
-        ("owner", JString(owner))         <- pkg
-        ("desc", JString(desc))           <- pkg
-        ("labels", labels)                <- pkg
-        ("attribute_names", attrs)        <- pkg
-        ("followers_count", JInt(followers)) <- pkg
-        ("created", JString(created))     <- pkg
-        ("website_url", web)              <- pkg
-        ("issue_tracker_url", issues)     <- pkg
-        ("github_repo", github)           <- pkg
-        ("github_release_notes", JString(releaseNotes)) <- pkg
-        ("public_download_numbers", JBool(downloadNums)) <- pkg
-        ("linked_to_repos", links)        <- pkg
-        ("versions", versions)            <- pkg
-        ("latest_version", latestVersion) <- pkg
-        ("updated", JString(updated))     <- pkg
-        ("rating_count", JInt(rating))    <- pkg
-        ("system_ids", sysIds)            <- pkg
-        ("vcs_url", vcs)                  <- pkg
-      } yield Package(
-        name, repo, owner, desc,
-        strs(labels), strs(attrs),
-        followers.toInt,
-        created, updated,
-        str(web), str(issues), str(github), str(vcs),
-        releaseNotes, downloadNums,
-        strs(links), strs(versions), str(latestVersion),
-        rating.toInt, strs(sysIds))).head
-     }
+  implicit val packages: Rep[List[Package]] =
+    new JsonRep[List[Package]] {
+      def map(json: JValue) = for {
+        JArray(pkgs) <- json
+        pkg          <- pkgs
+      } yield packageDetails.one(pkg).get
+    }
+
+  implicit object packageDetails extends JsonRep[Package] {
+    def one(js: JValue): Option[Package] = (for {
+      JObject(pkg)                      <- js
+      ("name", JString(name))           <- pkg
+      ("repo", JString(repo))           <- pkg
+      ("owner", JString(owner))         <- pkg
+      ("desc", desc)                    <- pkg
+      ("labels", labels)                <- pkg
+      ("attribute_names", attrs)        <- pkg
+      ("followers_count", JInt(followers)) <- pkg
+      ("created", JString(created))     <- pkg
+      ("website_url", web)              <- pkg
+      ("issue_tracker_url", issues)     <- pkg
+      ("github_repo", github)           <- pkg
+      ("github_release_notes_file", JString(releaseNotes)) <- pkg
+      ("public_download_numbers", JBool(downloadNums)) <- pkg
+      ("linked_to_repos", links)        <- pkg
+      ("versions", versions)            <- pkg
+      ("latest_version", latestVersion) <- pkg
+      ("updated", JString(updated))     <- pkg
+      ("rating_count", JInt(rating))    <- pkg
+      ("system_ids", sysIds)            <- pkg
+      ("vcs_url", vcs)                  <- pkg
+    } yield Package(
+      name,
+      repo,
+      owner,
+      str(desc),
+      strs(labels),
+      strs(attrs),
+      followers.toInt,
+      created,
+      updated,
+      str(web),
+      str(issues),
+      str(github),
+      str(vcs),
+      releaseNotes,
+      downloadNums,
+      strs(links),
+      strs(versions),
+      str(latestVersion),
+      rating.toInt,
+      strs(sysIds))).headOption
+
+    def map(json: JValue) = one(json).get
   }
 
-  implicit val PackageSummaries: Rep[List[PackageSummary]] =
-    new Rep[List[PackageSummary]] {
-      def map = as.json4s.Json andThen(for {
-        JArray(pkgs)              <- _
+  implicit val packageSummaries: Rep[List[PackageSummary]] =
+    new JsonRep[List[PackageSummary]] {
+      def map(json: JValue) = for {
+        JArray(pkgs)              <- json
         JObject(pkg)              <- pkgs
         ("name", JString(name))   <- pkg
         ("linked", JBool(linked)) <- pkg
-      } yield PackageSummary(name, linked))
+      } yield PackageSummary(name, linked)
     }
 
-  /*implicit val VersionDetails: Rep[Version] =
-    new Repo[Version] {
-      def map = as.json4s.Json andThen { js =>
-        (for {
+  implicit object versions extends JsonRep[Version] {
+    def one(js: JValue) = (for {
+      JObject(ver)                    <- js
+      ("name", JString(name))         <- ver
+      ("desc", desc)                  <- ver
+      ("package", JString(pkg))       <- ver
+      ("repo", JString(repo))         <- ver
+      ("owner", JString(owner))       <- ver
+      ("labels", labels)              <- ver
+      ("attribute_names", attrs)      <- ver
+      ("created", JString(created))   <- ver
+      ("updated", JString(updated))   <- ver
+      ("released", JString(released)) <- ver
+      ("ordinal", JDecimal(ord))       <- ver
+      ("vcs_tag", tag)                <- ver
+    } yield Version(
+      name,
+      str(desc),
+      pkg,
+      repo,
+      owner,
+      strs(labels),
+      strs(attrs),
+      created,
+      updated,
+      released,
+      ord.toInt,
+      str(tag))).headOption
 
-        } yield ...).head
-      }
-    }*/
+    def map(json: JValue) =
+      one(json).get
+  }
+
+  implicit val names: Rep[List[Name]] =
+    new JsonRep[List[Name]] {
+      def map(json: JValue) = for {
+        JArray(xs)           <- json
+        JObject(name)        <- xs
+        ("name", JString(n)) <- name
+      } yield Name(n)
+    }
+
+  implicit val user: Rep[User] =
+    new JsonRep[User] {
+      def map(json: JValue) = (for {
+        JObject(u)                           <- json
+        ("name", JString(name))              <- u
+        ("full_name", JString(fullname))     <- u
+        ("gravatar_id", JString(gravatar))   <- u
+        ("repos", repos)                     <- u
+        ("organizations", orgs)              <- u
+        ("followers_count", JInt(followers)) <- u
+        ("registered", JString(reg))         <- u
+        ("quota_used_bytes", JInt(bytes))    <- u
+      } yield User(
+        name,
+        fullname,
+        gravatar,
+        strs(repos),
+        strs(orgs),
+        followers.toInt,
+        reg,
+        bytes.toLong
+      )).head
+    }
 }
