@@ -2,11 +2,11 @@ organization := "me.lessis"
 
 name := "bintry"
 
-version := "0.3.0"
+version := "0.4.0-SNAPSHOT"
 
 description := "your packages, delivered fresh"
 
-crossScalaVersions := Seq("2.10.4", "2.11.1")
+crossScalaVersions := Seq("2.10.4", "2.11.5")
 
 scalaVersion := crossScalaVersions.value.last
 
@@ -27,7 +27,7 @@ publishArtifact in Test := false
 licenses := Seq("MIT" ->
                 url(s"https://github.com/softprops/${name.value}/blob/${version.value}/LICENSE"))
 
-homepage := some(url(s"https://github.com/softprops/${name.value}/#readme"))
+homepage := Some(url(s"https://github.com/softprops/${name.value}/#readme"))
 
 pomExtra := (
   <scm>
