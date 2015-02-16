@@ -11,7 +11,7 @@ A scala interface for the [bintray](https://bintray.com) [api](https://bintray.c
 add the following to your sbt build definition
 
 ```scala
-libraryDependencies += "me.lessis" %% "bintry" % "0.3.0"
+libraryDependencies += "me.lessis" %% "bintry" % "0.4.0"
 ```
 
 ## civilized method
@@ -57,7 +57,7 @@ repo.get("my-awesome-package").version("0.1.0")
 
 You can assign typed metadata as [attributes](https://bintray.com/docs/api.html#_attributes) to packages and versions.
 Bintray expects these to be of type `string`, `date`, `number`, `boolean` or `version`. Bintry exposes these types as
-`StringAttr(stringVal)`, `DateAttr(java.util.Date)`, `IntAttr(intVal)`, `BooleanAttr(boolVal)` and  `VersionAttr(stringVal)` respectively.
+`Attr.String(stringVal)`, `Attr.Date(java.util.Date)`, `Attr.Number(intVal)`, `Attr.Boolean(boolVal)` and  `Attr(stringVal)` respectively.
 
 
 Doug Tangren (softprops) 2013-2014

@@ -76,7 +76,7 @@ case class User(
 case class Name(name: String)
 
 /** Type class for representing a response as a given type */
-trait Rep[T] {
+trait Rep[+T] {
   def map(r: Response): T
 }
 
@@ -94,12 +94,12 @@ object Rep {
 
   implicit val Identity: Rep[Response] =
     new Rep[Response] {
-      def map(r: Response) = r
+      def map(r: Response): Response = r
     }
 
   implicit val nada: Rep[Unit] =
     new Rep[Unit] {
-      def map(r: Response) = ()
+      def map(r: Response): Unit = ()
     }
 
   trait JsonRep[T] extends Rep[T] {
@@ -116,15 +116,29 @@ object Rep {
       } yield Message(message)).head
     }
 
-  implicit val attrs: Rep[Attr.AttrMap] =
+  implicit val attributes: Rep[Attr.AttrMap] =
     new JsonRep[Attr.AttrMap] {
-      def map(json: JValue) =
-        AttrsFromJson(json)
-    }
+      def map(json: JValue): Attr.AttrMap =
+        (for {
+          JArray(ary)                <- json
+          JObject(fs)                <- ary
+          ("name", JString(name))    <- fs
+          ("type", JString(tpe))     <- fs
+          ("values", JArray(values)) <- fs
+        } yield
+          (name, (tpe match {
+            case "string"  => for { JString(str)  <- values } yield Attr.String(str)
+            case "number"  => for { JInt(num)     <- values } yield Attr.Number(num.toInt)
+            case "date"    => for { JString(date) <- values } yield Attr.Date(Iso8601(date))
+            case "version" => for { JString(ver)  <- values } yield Attr.Version(ver)
+            case "boolean" => for { JBool(bool)   <- values } yield Attr.Boolean(bool)
+            case _ => Nil
+          }): Iterable[Attr[_]])).toMap
+     }
 
   implicit val repoSummaries: Rep[List[RepoSummary]] =
     new JsonRep[List[RepoSummary]] {
-      def map(json: JValue) = for {
+      def map(json: JValue): List[RepoSummary] = for {
         JArray(repos)             <- json
         JObject(repo)             <- repos
         ("name", JString(name))   <- repo
@@ -134,7 +148,7 @@ object Rep {
 
   implicit val repoDetails: Rep[Repo] =
     new JsonRep[Repo] {
-      def map(json: JValue) =
+      def map(json: JValue): Repo =
         (for {
           JObject(repo)                     <- json
           ("name", JString(name))           <- repo
@@ -142,20 +156,20 @@ object Rep {
           ("desc", JString(desc))           <- repo
           ("labels", labels)                <- repo
           ("created", JString(created))     <- repo
-          ("package_count", JInt(packages)) <- repo
+          ("package_count", JInt(pkgCount)) <- repo
         } yield Repo(
           name,
           owner,
           desc,
           strs(labels),
           created,
-          packages.toInt)
+          pkgCount.toInt)
        ).head
     }
 
   implicit val packages: Rep[List[Package]] =
     new JsonRep[List[Package]] {
-      def map(json: JValue) = for {
+      def map(json: JValue): List[Package] = for {
         JArray(pkgs) <- json
         pkg          <- pkgs
       } yield packageDetails.one(pkg).get
@@ -206,12 +220,12 @@ object Rep {
       rating.toInt,
       strs(sysIds))).headOption
 
-    def map(json: JValue) = one(json).get
+    def map(json: JValue): Package = one(json).get
   }
 
   implicit val packageSummaries: Rep[List[PackageSummary]] =
     new JsonRep[List[PackageSummary]] {
-      def map(json: JValue) = for {
+      def map(json: JValue): List[PackageSummary] = for {
         JArray(pkgs)              <- json
         JObject(pkg)              <- pkgs
         ("name", JString(name))   <- pkg
@@ -219,42 +233,40 @@ object Rep {
       } yield PackageSummary(name, linked)
     }
 
-  implicit object versions extends JsonRep[Version] {
-    def one(js: JValue) = (for {
-      JObject(ver)                    <- js
-      ("name", JString(name))         <- ver
-      ("desc", desc)                  <- ver
-      ("package", JString(pkg))       <- ver
-      ("repo", JString(repo))         <- ver
-      ("owner", JString(owner))       <- ver
-      ("labels", labels)              <- ver
-      ("attribute_names", attrs)      <- ver
-      ("created", JString(created))   <- ver
-      ("updated", JString(updated))   <- ver
-      ("released", JString(released)) <- ver
-      ("ordinal", JDecimal(ord))       <- ver
-      ("vcs_tag", tag)                <- ver
-    } yield Version(
-      name,
-      str(desc),
-      pkg,
-      repo,
-      owner,
-      strs(labels),
-      strs(attrs),
-      created,
-      updated,
-      released,
-      ord.toInt,
-      str(tag))).headOption
-
-    def map(json: JValue) =
-      one(json).get
-  }
+  implicit val versions: JsonRep[Version] =
+    new JsonRep[Version] {
+      def map(json: JValue): Version = (for {
+        JObject(ver)                    <- json
+        ("name", JString(name))         <- ver
+        ("desc", desc)                  <- ver
+        ("package", JString(pkg))       <- ver
+        ("repo", JString(repo))         <- ver
+        ("owner", JString(owner))       <- ver
+        ("labels", labels)              <- ver
+        ("attribute_names", attrs)      <- ver
+        ("created", JString(created))   <- ver
+        ("updated", JString(updated))   <- ver
+        ("released", JString(released)) <- ver
+        ("ordinal", JDecimal(ord))       <- ver
+        ("vcs_tag", tag)                <- ver
+      } yield Version(
+        name,
+        str(desc),
+        pkg,
+        repo,
+        owner,
+        strs(labels),
+        strs(attrs),
+        created,
+        updated,
+        released,
+        ord.toInt,
+        str(tag))).head
+    }
 
   implicit val names: Rep[List[Name]] =
     new JsonRep[List[Name]] {
-      def map(json: JValue) = for {
+      def map(json: JValue): List[Name] = for {
         JArray(xs)           <- json
         JObject(name)        <- xs
         ("name", JString(n)) <- name
@@ -263,7 +275,7 @@ object Rep {
 
   implicit val user: Rep[User] =
     new JsonRep[User] {
-      def map(json: JValue) = (for {
+      def map(json: JValue): User = (for {
         JObject(u)                           <- json
         ("name", JString(name))              <- u
         ("full_name", JString(fullname))     <- u

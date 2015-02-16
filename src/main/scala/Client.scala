@@ -12,13 +12,13 @@ object Client {
 
   abstract class Completion[T: Rep] {
 
-    def apply[T]
-      (handler: Client.Handler[T]): Future[T]
+    def apply[TT]
+      (handler: Client.Handler[TT]): Future[TT]
 
     def apply(): Future[T] =
       apply(implicitly[Rep[T]].map(_))
 
-    def apply[T](f: Response => T): Future[T] =
+    def apply[TT](f: Response => TT): Future[TT] =
       apply(new FunctionHandler(f) {
         override def onCompleted(response: Response) =
           if (response.getStatusCode / 100 == 2) f(response)

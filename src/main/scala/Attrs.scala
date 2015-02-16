@@ -49,25 +49,6 @@ object AttrsToJson {
      }
 }
 
-object AttrsFromJson {
-  def apply(js: JValue): Attr.AttrMap =
-    (for {
-      JArray(ary)                <- js
-      JObject(fs)                <- ary
-      ("name", JString(name))    <- fs
-      ("type", JString(tpe))     <- fs
-      ("values", JArray(values)) <- fs
-    } yield
-      (name, (tpe match {
-        case "string"  => for { JString(str)  <- values } yield Attr.String(str)
-        case "number"  => for { JInt(num)     <- values } yield Attr.Number(num.toInt)
-        case "date"    => for { JString(date) <- values } yield Attr.Date(Iso8601(date)) // todo ( ISO8601 (yyyy-MM-dd'T'HH:mm:ss.SSSZ) )
-        case "version" => for { JString(ver)  <- values } yield Attr.Version(ver)
-        case "boolean" => for { JBool(bool)   <- values } yield Attr.Boolean(bool)
-        case _ => Nil
-      }): Iterable[Attr[_]])).toMap
-}
-
 trait AttrQuery[A <: Attr[_]]
 
 case class AttrIs[A <: Attr[_]](attr: A) extends AttrQuery[A]
