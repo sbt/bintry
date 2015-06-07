@@ -55,7 +55,7 @@ repo.get("my-awesome-package").version("0.1.0")
 
 ## metadata
 
-You can assign typed metadata as [attributes](https://bintray.com/docs/api.html#_attributes) to packages and versions.
+You can assign typed metadata as [attributes](https://bintray.com/docs/api/#_attributes) to packages and versions.
 Bintray expects these to be of type `string`, `date`, `number`, `boolean` or `version`. Bintry exposes these types as
 `Attr.String(stringVal)`, `Attr.Date(java.util.Date)`, `Attr.Number(intVal)`, `Attr.Boolean(boolVal)` and  `Attr(stringVal)` respectively.
 
