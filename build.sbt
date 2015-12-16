@@ -23,17 +23,14 @@ licenses := Seq("MIT" ->
 
 homepage := Some(url(s"https://github.com/softprops/${name.value}/#readme"))
 
-seq(bintraySettings:_*)
-
-bintray.Keys.packageLabels in bintray.Keys.bintray := Seq("bintray", "dispatch", "http")
+bintrayPackageLabels := Seq("bintray", "dispatch", "http")
 
 publishArtifact in Test := false
 
-
 pomExtra := (
   <scm>
-    <url>git@github.com:softprops/bintry.git</url>
-    <connection>scm:git:git@github.com:softprops/bintry.git</connection>
+    <url>git@github.com:softprops/{name.value}.git</url>
+    <connection>scm:git:git@github.com:softprops/{name.value}.git</connection>
   </scm>
   <developers>
     <developer>
@@ -45,6 +42,6 @@ pomExtra := (
 
 lsSettings
 
-externalResolvers in LsKeys.lsync := (resolvers in bintray.Keys.bintray).value
+externalResolvers in LsKeys.lsync := (resolvers in bintray).value
 
-(LsKeys.tags in LsKeys.lsync) := (bintray.Keys.packageLabels in bintray.Keys.bintray).value
+(LsKeys.tags in LsKeys.lsync) := bintrayPackageLabels.value
