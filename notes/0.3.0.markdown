@@ -1,6 +1,6 @@
 # features
 
-* Added support to [sync to mvn central](https://bintray.com/docs/api.html#_sync_version_artifacts_to_maven_central)
+* Added support to [sync to mvn central](https://bintray.com/docs/api/#_sync_version_artifacts_to_maven_central)
 
 Enjoy Bintray's new [syncing](http://blog.bintray.com/2014/02/11/bintray-as-pain-free-gateway-to-maven-central/) feature. Note, you 
 may need to adjust your build definition to meet the [requirements](https://docs.sonatype.org/display/Repository/Central+Sync+Requirements) for a maven central sync.
@@ -10,7 +10,7 @@ may need to adjust your build definition to meet the [requirements](https://docs
       .get(pkg).version(vers)
       .mavenCentralSync(sonauser, sonapassword)()
     
-* Added support for pgp signing for [versions](https://bintray.com/docs/api.html#_gpg_sign_a_version) and [files](https://bintray.com/docs/api.html#_gpg_sign_a_file)
+* Added support for pgp signing for [versions](https://bintray.com/docs/api/#_gpg_sign_a_version) and [files](https://bintray.com/docs/api/#_gpg_sign_a_file)
 
 Feel at ease with Bintray's [hosted pgp signing feature](http://blog.bintray.com/2013/08/06/fight-crime-with-gpg/)
 
@@ -19,4 +19,4 @@ Feel at ease with Bintray's [hosted pgp signing feature](http://blog.bintray.com
       .get(pkg).version(vers)
       .sign(passphrase)()
   
-* Added support for downloading [logs](https://bintray.com/docs/api.html#_list_package_download_log_files) and pulling down a [download](https://bintray.com/docs/api.html#_download_package_download_log_file)
+* Added support for downloading [logs](https://bintray.com/docs/api/#_list_package_download_log_files) and pulling down a [download](https://bintray.com/docs/api/#_download_package_download_log_file)

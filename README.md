@@ -2,7 +2,7 @@
 
 your packages, delivered fresh
 
-A scala interface for the [bintray](https://bintray.com) [api](https://bintray.com/docs/api.html).
+A scala interface for the [bintray](https://bintray.com) [api](https://bintray.com/docs/api/).
 
 # install
 
