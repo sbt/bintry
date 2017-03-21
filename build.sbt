@@ -39,9 +39,3 @@ pomExtra := (
       <url>https://github.com/softprops</url>
     </developer>
   </developers>)
-
-lsSettings
-
-externalResolvers in LsKeys.lsync := (resolvers in bintray).value
-
-(LsKeys.tags in LsKeys.lsync) := bintrayPackageLabels.value

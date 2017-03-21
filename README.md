@@ -14,12 +14,6 @@ add the following to your sbt build definition
 libraryDependencies += "me.lessis" %% "bintry" % "0.4.0"
 ```
 
-## civilized method
-
-using [ls](https://github.com/softprops/ls#readme)
-
-    ls-install bintry
-
 # usage
 
 Create a new bintry `Client` with your bintray username and api key ( which can be found [here](https://bintray.com/profile/edit) )
