@@ -8,6 +8,8 @@ import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods.{ compact, render }
 import java.io.File
 
+import bintry.Client.Completion
+
 trait Methods { self: Requests =>
 
   object json {
@@ -214,12 +216,25 @@ trait Methods { self: Requests =>
         def delete =
           complete[Message](versionBase.DELETE)
 
-        // todo: add structure
         /** https://bintray.com/docs/api/#_update_version */
-        def update(desc: String) =
+        @deprecated(message = "Use structured update method", since = "0.5.0")
+        def update(desc: String): Completion[Message] =
+          update(desc = Some(desc))
+
+        /** https://bintray.com/docs/api/#_update_version */
+        def update(desc: Option[String] = None,
+                   githubReleaseNotesFile: Option[String] = None,
+                   githubUseTagReleaseNotes: Option[Boolean] = None,
+                   vcsTag: Option[String] = None,
+                   released: Option[String] = None): Completion[Message] =
           complete[Message](json.content(versionBase.PATCH) <<
-                   json.str(("desc" -> desc)))
-        
+            json.str(
+              ("desc" -> desc) ~
+              ("github_release_notes_file" -> githubReleaseNotesFile) ~
+              ("github_use_tag_release_notes" -> githubUseTagReleaseNotes) ~
+              ("vcs_tag" -> vcsTag) ~
+              ("released" -> released)))
+
         def attrs = Attrs
 
         /** https://bintray.com/docs/api/#_upload_content */
