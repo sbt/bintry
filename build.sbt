@@ -19,9 +19,9 @@ libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native
 initialCommands := "import scala.concurrent.ExecutionContext.Implicits.global;"
 
 licenses := Seq("MIT" ->
-                url(s"https://github.com/softprops/${name.value}/blob/${version.value}/LICENSE"))
+                url(s"https://github.com/sbt/${name.value}/blob/${version.value}/LICENSE"))
 
-homepage := Some(url(s"https://github.com/softprops/${name.value}/#readme"))
+homepage := Some(url(s"https://github.com/sbt/${name.value}/#readme"))
 
 bintrayPackageLabels := Seq("bintray", "dispatch", "http")
 
@@ -29,8 +29,8 @@ publishArtifact in Test := false
 
 pomExtra := (
   <scm>
-    <url>git@github.com:softprops/{name.value}.git</url>
-    <connection>scm:git:git@github.com:softprops/{name.value}.git</connection>
+    <url>git@github.com:sbt/{name.value}.git</url>
+    <connection>scm:git:git@github.com:sbt/{name.value}.git</connection>
   </scm>
   <developers>
     <developer>
