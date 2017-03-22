@@ -3,3 +3,8 @@ sudo: false
 scala:
 - 2.11.8
 - 2.10.6
+jdk: oraclejdk7
+matrix:
+  include:
+  - scala: 2.12.1
+    jdk: oraclejdk8
