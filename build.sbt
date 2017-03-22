@@ -10,9 +10,17 @@ crossScalaVersions := Seq("2.10.6", "2.11.8")
 
 scalaVersion := crossScalaVersions.value.last
 
-scalacOptions in ThisBuild ++= Seq(Opts.compile.deprecation) ++
-  Seq("-Ywarn-unused-import", "-Ywarn-unused", "-Xlint", "-feature").filter(
-    Function.const(scalaVersion.value.startsWith("2.11")))
+val unusedWarnings = Seq("-Ywarn-unused-import", "-Ywarn-unused")
+
+scalacOptions ++= Seq(Opts.compile.deprecation, "-Xlint", "-feature")
+
+scalacOptions ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)){
+  case Some((2, v)) if v >= 11 => unusedWarnings
+}.toList.flatten
+
+Seq(Compile, Test).flatMap(c =>
+  scalacOptions in (c, console) --= unusedWarnings
+)
 
 libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2")
 
