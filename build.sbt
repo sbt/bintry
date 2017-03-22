@@ -6,7 +6,7 @@ version := "0.5.0-SNAPSHOT"
 
 description := "your packages, delivered fresh"
 
-crossScalaVersions := Seq("2.10.4", "2.11.5")
+crossScalaVersions := Seq("2.10.6", "2.11.8")
 
 scalaVersion := crossScalaVersions.value.last
 
