@@ -3,7 +3,6 @@ package bintry
 import com.ning.http.client.Response
 import dispatch.as
 import org.json4s._
-import org.json4s.JsonDSL._
 
 object Message {
   val empty = Message("")
