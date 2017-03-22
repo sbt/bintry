@@ -22,7 +22,18 @@ Seq(Compile, Test).flatMap(c =>
   scalacOptions in (c, console) --= unusedWarnings
 )
 
-libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % "0.11.2")
+val dispatchVersion = SettingKey[String]("dispatchVersion")
+
+dispatchVersion := {
+  CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, 10)) =>
+      "0.11.3"
+    case _ =>
+      "0.12.0"
+  }
+}
+
+libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % dispatchVersion.value)
 
 initialCommands := "import scala.concurrent.ExecutionContext.Implicits.global;"
 
