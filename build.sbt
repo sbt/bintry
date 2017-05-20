@@ -2,7 +2,7 @@ lazy val dispatchVersion = SettingKey[String]("dispatchVersion")
 lazy val unusedWarnings = Seq("-Ywarn-unused-import", "-Ywarn-unused")
 
 lazy val commonSettings: Seq[Setting[_]] = Seq(
-    version in ThisBuild := "0.5.0-SNAPSHOT",
+    version in ThisBuild := "0.6.0",
     organization in ThisBuild := "org.foundweekends",
     homepage in ThisBuild := Some(url(s"https://github.com/sbt/${name.value}/#readme")),
     licenses in ThisBuild := Seq("MIT" ->
@@ -38,10 +38,13 @@ lazy val root = (project in file("."))
     description := "your packages, delivered fresh",
     dispatchVersion := {
       CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 10)) => "0.11.3"
+        case Some((2, 10)) => "0.11.2"
         case _             => "0.12.0"
       }
     },
-    libraryDependencies ++= Seq("net.databinder.dispatch" %% "dispatch-json4s-native" % dispatchVersion.value),
+    libraryDependencies ++= Seq(
+      "net.databinder.dispatch" %% "dispatch-json4s-native" % dispatchVersion.value,
+      "org.scalatest" %% "scalatest" % "3.0.0" % "test"
+    ),
     initialCommands := "import scala.concurrent.ExecutionContext.Implicits.global;"
   )
