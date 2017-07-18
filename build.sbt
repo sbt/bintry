@@ -2,7 +2,7 @@ lazy val dispatchVersion = SettingKey[String]("dispatchVersion")
 lazy val unusedWarnings = Seq("-Ywarn-unused-import", "-Ywarn-unused")
 
 lazy val commonSettings: Seq[Setting[_]] = Seq(
-    version in ThisBuild := "0.6.0",
+    version in ThisBuild := "0.5.1",
     organization in ThisBuild := "org.foundweekends",
     homepage in ThisBuild := Some(url(s"https://github.com/sbt/${name.value}/#readme")),
     licenses in ThisBuild := Seq("MIT" ->
