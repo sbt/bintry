@@ -38,7 +38,7 @@ lazy val root = (project in file("."))
     description := "your packages, delivered fresh",
     dispatchVersion := {
       CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 10)) => "0.11.2"
+        case Some((2, 10)) => "0.11.2" // !WARNING! Don't upgrade! See sbt/sbt-bintray#104
         case _             => "0.12.0"
       }
     },
