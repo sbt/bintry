@@ -210,7 +210,7 @@ trait Methods { self: Requests =>
               << json.str(
                 ("username" -> sonatypeUser) ~
                 ("password" -> sonatypePassword) ~
-                ("close"    -> Some("1").filter(Function.const(close)))))
+                ("close"    -> (if (close) "1" else "0"))))
 
         /** https://bintray.com/docs/api/#_delete_version */
         def delete =
