@@ -11,7 +11,7 @@ A scala interface for the [bintray](https://bintray.com) [api](https://bintray.c
 add the following to your sbt build definition
 
 ```scala
-libraryDependencies += "org.foundweekends" %% "bintry" % "0.5.1"
+libraryDependencies += "org.foundweekends" %% "bintry" % "0.5.2"
 ```
 
 # usage
