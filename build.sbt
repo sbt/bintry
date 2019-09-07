@@ -12,7 +12,7 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
       Developer("softprops", "Doug Tangren", "@softprops", url("https://github.com/softprops"))
     ),
     scmInfo in ThisBuild := Some(ScmInfo(url(s"https://github.com/sbt/${name.value}"), s"git@github.com:sbt/{name.value}.git")),
-    crossScalaVersions in ThisBuild := Seq("2.10.7", "2.11.12", "2.12.4"),
+    crossScalaVersions in ThisBuild := Seq("2.10.7", "2.11.12", "2.12.9"),
     scalaVersion in ThisBuild := (crossScalaVersions in ThisBuild).value.last,
     scalacOptions ++= Seq(Opts.compile.deprecation, "-Xlint", "-feature"),
     scalacOptions ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)){
