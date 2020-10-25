@@ -9,42 +9,44 @@ object JsonVersionLibSpec extends BasicTestSuite {
     println(s"Scala version tested is: ${scala.util.Properties.versionString}")
     val rendered = jsonMethods.compact(
       jsonMethods.render(
-        ("name"     -> "randomName") ~
-        ("desc"     -> Option("basicDescription")) ~
-        ("licenses" -> List("Apache", "MIT")) ~
-        ("labels"   -> List("label1", "label2")) ~
-        ("vcs_url"  -> Option("vcs"))
+        ("name" -> "randomName") ~
+          ("desc" -> Option("basicDescription")) ~
+          ("licenses" -> List("Apache", "MIT")) ~
+          ("labels" -> List("label1", "label2")) ~
+          ("vcs_url" -> Option("vcs"))
       )
     )
 
-    assert(rendered ==
-      "{" +
-        """"name":"randomName",""" +
-        """"desc":"basicDescription",""" +
-        """"licenses":["Apache","MIT"],""" +
-        """"labels":["label1","label2"],""" +
-        """"vcs_url":"vcs"""" +
-      "}"
+    assert(
+      rendered ==
+        "{" +
+          """"name":"randomName",""" +
+          """"desc":"basicDescription",""" +
+          """"licenses":["Apache","MIT"],""" +
+          """"labels":["label1","label2"],""" +
+          """"vcs_url":"vcs"""" +
+          "}"
     )
   }
 
   test("Stringifying json should work with some values omitted") {
     val rendered = jsonMethods.compact(
       jsonMethods.render(
-        ("name"     -> "randomName") ~
-          ("desc"     -> (None : Option[String])) ~
+        ("name" -> "randomName") ~
+          ("desc" -> (None: Option[String])) ~
           ("licenses" -> List[String]()) ~
-          ("labels"   -> List[String]()) ~
-          ("vcs_url"  -> (None : Option[String]))
+          ("labels" -> List[String]()) ~
+          ("vcs_url" -> (None: Option[String]))
       )
     )
 
-    assert(rendered ==
-      "{" +
-        """"name":"randomName",""" +
-        """"licenses":[],""" +
-        """"labels":[]""" +
-        "}"
+    assert(
+      rendered ==
+        "{" +
+          """"name":"randomName",""" +
+          """"licenses":[],""" +
+          """"labels":[]""" +
+          "}"
     )
   }
 }

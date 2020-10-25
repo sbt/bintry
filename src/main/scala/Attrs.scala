@@ -20,8 +20,8 @@ object AttrsSearchJson {
     pair match {
       case (name, query) =>
         (name -> (query match {
-          case AttrOneOf(values)  =>  values.toList.map(AttrsToJson(_))
-          case AttrIs(value)      =>  AttrsToJson.apply(value) :: Nil
+          case AttrOneOf(values) => values.toList.map(AttrsToJson(_))
+          case AttrIs(value)     => AttrsToJson.apply(value) :: Nil
         }))
     }
 
@@ -30,23 +30,23 @@ object AttrsSearchJson {
 }
 
 object AttrsToJson {
-   def apply[A <: Attr[_]](a: A): JValue =
-     a match {
-       case Attr.String(value)  => JString(value)
-       case Attr.Number(value)  => JInt(value)
-       case Attr.Boolean(value) => JBool(value)
-       case Attr.Date(value)    => JString(Iso8601(value))
-       case Attr.Version(value) => JString(value)
-     }
-   def apply[A <: Attr[_]](attrs: Iterable[(String, Iterable[A])]): JValue =
-     attrs.map {
-       case (name, values) =>
-         (("name" -> name) ~ {
-           val tpe = values.headOption.map(_.tpe).getOrElse("string")
-           ("type" -> tpe) ~ ("values" ->
-             values.map(apply(_)))
-         })
-     }
+  def apply[A <: Attr[_]](a: A): JValue =
+    a match {
+      case Attr.String(value)  => JString(value)
+      case Attr.Number(value)  => JInt(value)
+      case Attr.Boolean(value) => JBool(value)
+      case Attr.Date(value)    => JString(Iso8601(value))
+      case Attr.Version(value) => JString(value)
+    }
+  def apply[A <: Attr[_]](attrs: Iterable[(String, Iterable[A])]): JValue =
+    attrs.map {
+      case (name, values) =>
+        (("name" -> name) ~ {
+          val tpe = values.headOption.map(_.tpe).getOrElse("string")
+          ("type" -> tpe) ~ ("values" ->
+            values.map(apply(_)))
+        })
+    }
 }
 
 trait AttrQuery[A <: Attr[_]]
@@ -59,7 +59,6 @@ sealed trait Attr[T] {
   def value: T
 }
 
-
 object Attr {
   import java.lang.{ String => JString, Boolean => JBoolean }
   type AttrMap = Map[JString, Iterable[Attr[_]]]
@@ -69,5 +68,3 @@ object Attr {
   case class Boolean(value: JBoolean) extends Attr[JBoolean]
   case class Version(value: JString) extends Attr[JString]
 }
-
-
