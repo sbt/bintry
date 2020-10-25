@@ -1,4 +1,4 @@
-ThisBuild / version := "0.5.3-SNAPSHOT"
+ThisBuild / version := "0.6.1-SNAPSHOT"
 ThisBuild / organization := "org.foundweekends"
 ThisBuild / homepage := Some(url(s"https://github.com/sbt/${name.value}/#readme"))
 ThisBuild / description := "your packages, delivered fresh"
