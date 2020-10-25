@@ -1,6 +1,6 @@
 package bintry
 
-import com.ning.http.client.Response
+import org.asynchttpclient.Response
 import dispatch.as
 import org.json4s._
 

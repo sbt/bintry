@@ -1,6 +1,6 @@
 package bintry
 
-import com.ning.http.client.{ AsyncHandler, Response }
+import org.asynchttpclient.{ AsyncHandler, Response }
 import dispatch.{ FunctionHandler, Http, Req }
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -51,7 +51,7 @@ abstract class Requests(
 
 case class Client(
   user: String, token: String,
-  private val http: Http = new Http)
+  private val http: Http = Http(Http.defaultClientBuilder))
  (implicit ec: ExecutionContext)
   extends Requests(Credentials.BasicAuth(user, token), http) {
   /** releases http resources. once closed, this client may no longer be used */

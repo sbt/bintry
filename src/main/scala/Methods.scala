@@ -1,12 +1,13 @@
 package bintry
 
-import com.ning.http.client.Response
+import org.asynchttpclient.Response
 import bintry.Util.appendPath
 import dispatch.Req
 import org.json4s.JValue
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods.{ compact, render }
 import java.io.File
+import java.nio.charset.StandardCharsets
 
 import bintry.Client.Completion
 
@@ -14,7 +15,7 @@ trait Methods { self: Requests =>
 
   object json {
     private[this] val Type = "application/json"
-    private[this] val Encoding = "UTF-8"
+    private[this] val Encoding = StandardCharsets.UTF_8
     def content(r: Req) = r.setContentType(Type, Encoding)
     def str(jv: JValue) = compact(render(jv))
   }
