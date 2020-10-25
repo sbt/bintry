@@ -1,19 +1,20 @@
-lazy val dispatchVersion = SettingKey[String]("dispatchVersion")
-lazy val unusedWarnings = Seq("-Ywarn-unused-import", "-Ywarn-unused")
+ThisBuild / version := "0.5.3-SNAPSHOT"
+ThisBuild / organization := "org.foundweekends"
+ThisBuild / homepage := Some(url(s"https://github.com/sbt/${name.value}/#readme"))
+ThisBuild / description := "your packages, delivered fresh"
+ThisBuild / developers := List(
+  Developer("softprops", "Doug Tangren", "@softprops", url("https://github.com/softprops"))
+)
+ThisBuild / scmInfo := Some(ScmInfo(url(s"https://github.com/sbt/${name.value}"), s"git@github.com:sbt/{name.value}.git"))
+ThisBuild / crossScalaVersions := Seq("2.12.12", "2.13.3")
+ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.last
+
+lazy val dispatchVersion = settingKey[String]("")
+lazy val unusedWarnings = Seq("-Ywarn-unused")
 
 lazy val commonSettings: Seq[Setting[_]] = Seq(
-    version in ThisBuild := "0.5.3-SNAPSHOT",
-    organization in ThisBuild := "org.foundweekends",
-    homepage in ThisBuild := Some(url(s"https://github.com/sbt/${name.value}/#readme")),
-    licenses in ThisBuild := Seq("MIT" ->
+    licenses := Seq("MIT" ->
       url(s"https://github.com/sbt/${name.value}/blob/${version.value}/LICENSE")),
-    description in ThisBuild := "your packages, delivered fresh",
-    developers in ThisBuild := List(
-      Developer("softprops", "Doug Tangren", "@softprops", url("https://github.com/softprops"))
-    ),
-    scmInfo in ThisBuild := Some(ScmInfo(url(s"https://github.com/sbt/${name.value}"), s"git@github.com:sbt/{name.value}.git")),
-    crossScalaVersions in ThisBuild := Seq("2.10.7", "2.11.12", "2.12.10"),
-    scalaVersion in ThisBuild := (crossScalaVersions in ThisBuild).value.last,
     scalacOptions ++= Seq(Opts.compile.deprecation, "-Xlint", "-feature"),
     scalacOptions ++= PartialFunction.condOpt(CrossVersion.partialVersion(scalaVersion.value)){
       case Some((2, v)) if v >= 11 => unusedWarnings
@@ -36,15 +37,11 @@ lazy val root = (project in file("."))
   .settings(
     name := "bintry",
     description := "your packages, delivered fresh",
-    dispatchVersion := {
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 10)) => "0.11.2" // !WARNING! Don't upgrade! See sbt/sbt-bintray#104
-        case _             => "0.12.0"
-      }
-    },
+    dispatchVersion := "1.2.0",
     libraryDependencies ++= Seq(
-      "net.databinder.dispatch" %% "dispatch-json4s-native" % dispatchVersion.value,
-      "org.scalatest" %% "scalatest" % "3.0.0" % "test"
+      "org.dispatchhttp" %% "dispatch-json4s-native" % dispatchVersion.value,
+      "com.eed3si9n.verify" %% "verify" % "0.2.0" % Test,
     ),
+    testFrameworks += new TestFramework("verify.runner.Framework"),
     initialCommands := "import scala.concurrent.ExecutionContext.Implicits.global;"
   )

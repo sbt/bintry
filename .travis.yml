@@ -1,8 +1,16 @@
 language: scala
-sudo: false
-scala:
-  - 2.12.10
-  - 2.11.12
-  - 2.10.7
-jdk:
-  - openjdk8
+jdk: openjdk8
+
+script: sbt +test scalafmtCheckAll
+
+before_cache:
+  - find $HOME/.cache/coursier/v1 -name "ivydata-*.properties" -delete
+  - find $HOME/.ivy2              -name "ivydata-*.properties" -delete
+  - find $HOME/.sbt               -name "*.lock"               -delete
+  - rm -r $(find $HOME/.sbt/boot -name "*-SNAPSHOT") || true
+
+cache:
+  directories:
+    - $HOME/.cache/coursier/v1
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/boot
